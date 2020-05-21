@@ -1,0 +1,21 @@
+{
+  "NAME": "KSP_DataDump",
+  "URL": "http://ksp.spacetux.net/avc/KSP_DataDump",
+  "DOWNLOAD": "https://github.com/linuxgurugamer/KSP_DataDump/releases",
+  "GITHUB": {
+    "USERNAME": "linuxgurugamer",
+    "REPOSITORY": "KSP_DataDump"
+  },
+  "VERSION": {
+    "MAJOR": 0,
+    "MINOR": 0,
+    "PATCH": 0,
+    "BUILD": 0
+  },
+  "KSP_VERSION_MIN": {
+    "MAJOR": 1,
+    "MINOR": 8,
+    "PATCH": 0
+  }
+}
+
