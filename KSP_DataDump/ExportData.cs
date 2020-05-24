@@ -9,7 +9,7 @@ using Vectrosity;
 using ClickThroughFix;
 using UnityEngine.Experimental.XR;
 using KSP.Localization;
-
+using System.Runtime.Remoting.Messaging;
 
 namespace KSP_DataDump
 {
@@ -46,7 +46,7 @@ namespace KSP_DataDump
         }
         Dictionary<string, ModuleInfo> moduleInfoList = new Dictionary<string, ModuleInfo>();
 
-        StringBuilder line;
+        StringBuilder line, headerLine;
         int colCnt = 0;
         void StartLine(string str)
         {
@@ -107,27 +107,33 @@ namespace KSP_DataDump
                                 {
                                     moduleInfoList[m.Value.moduleName].numFields++;
                                 }
-                            
-                                AppendLine( m.Value.moduleName + "." + mod.module.Fields[f].name );
+
+                                AppendLine(m.Value.moduleName + "." + mod.module.Fields[f].name);
                             }
                         }
                     }
                 }
             }
             EndLine();
-            byte[] bytes = Encoding.ASCII.GetBytes(line.ToString());
-            fs.Write(bytes, 0, line.Length);
-            foreach (var m in moduleInfoList)
+            if (!onefilePerMod)
             {
-                Log.Info("Module: " + m.Value.moduleName + ", startingCol: " + m.Value.startingCol + ", numFields: " + m.Value.numFields);
+                byte[] bytes = Encoding.ASCII.GetBytes(line.ToString());
+                fs.Write(bytes, 0, line.Length);
+                foreach (var m in moduleInfoList)
+                {
+                    Log.Info("Module: " + m.Value.moduleName + ", startingCol: " + m.Value.startingCol + ", numFields: " + m.Value.numFields);
+                }
+            } else
+            {
+                headerLine = line;
             }
         }
 
         const int MAXCOL = 1000;
         int maxUsedCol = 0;
-        FileStream fs;
+        FileStream fs = null;
 
-        void OpenFile()
+        void OpenFile(string outputFile)
         {
             if (File.Exists(outputFile))
                 File.Delete(outputFile);
@@ -140,7 +146,7 @@ namespace KSP_DataDump
             AppendLine(part.TechRequired);
             AppendLine(part.entryCost);
             AppendLine(part.cost);
-            AppendLine(part.title );
+            AppendLine(part.title);
             AppendLine(part.description);
             AppendLine(part.partPrefab.mass);
             AppendLine(part.bulkheadProfiles);
@@ -149,6 +155,7 @@ namespace KSP_DataDump
         }
         public void DumpData()
         {
+            string currentMod = "";
             List<AvailablePart> loadedParts = Utils.GetPartsList();
 
             foreach (AvailablePart part in loadedParts)
@@ -202,12 +209,9 @@ namespace KSP_DataDump
 
 
                                                 // colData[m.startingCol + cnt ] += ":" + Localizer.Format(v);
-                                                 colData[m.startingCol + cnt ] = Localizer.Format(v);
+                                                colData[m.startingCol + cnt] = Localizer.Format(v);
 
-
-
-
-                                                maxUsedCol = Math.Max(maxUsedCol, m.startingCol + cnt); 
+                                                maxUsedCol = Math.Max(maxUsedCol, m.startingCol + cnt);
                                                 cnt++;
                                                 partDone = true;
                                             }
@@ -218,6 +222,23 @@ namespace KSP_DataDump
                         }
                         if (partDone)
                         {
+                            if (onefilePerMod)
+                            {
+                                if (currentMod != partModName)
+                                {
+                                    if (fs != null)
+                                        fs.Close();
+                                    outputFile = partModName + ".csv";
+                                    OpenFile(outputFile);
+                                    if (allOutputfiles != "")
+                                        allOutputfiles += ", " + outputFile;
+                                    else
+                                        allOutputfiles = outputFile;
+                                    byte[] bytes2 = Encoding.ASCII.GetBytes(headerLine.ToString());
+                                    fs.Write(bytes2, 0, headerLine.Length);
+                                    currentMod = partModName;
+                                }
+                            }
                             Log.Info("maxUsedCol: " + maxUsedCol);
                             //StringBuilder line = new StringBuilder("\"" + part.name + "\"");
                             GetPartData(part);
@@ -244,37 +265,75 @@ namespace KSP_DataDump
 
         public void Start()
         {
-
+            foreach (var m in Module.modulesList)
+            {
+                if (m.Value.enabled)
+                {
+                    outputFile = m.Value.modName + ".csv";
+                }
+            }
         }
-        Rect winPos = new Rect(400, 400, 300, 100);
+        Rect winPos = new Rect(400, 400, 500, 150);
+
+        bool completed = false;
         public void OnGUI()
         {
             GUI.skin = HighLogic.Skin;
-            winPos = ClickThruBlocker.GUILayoutWindow(567382457, winPos, GetOutputFile, "KSP DataDump Output");
-
+            if (!completed)
+                winPos = ClickThruBlocker.GUILayoutWindow(567382457, winPos, GetOutputFile, "KSP DataDump Output");
+            else
+                winPos = ClickThruBlocker.GUILayoutWindow(57382457, winPos, ExportCompleted, "KSP DataDump Output");
         }
         string outputFile = "";
- 
+        string allOutputfiles = "";
+        bool onefilePerMod = false;
         public void GetOutputFile(int id)
         {
             GUILayout.BeginHorizontal();
+            if (onefilePerMod)
+                GUI.enabled = false;
             GUILayout.Label("Enter filename: ");
             outputFile = GUILayout.TextField(outputFile);
             GUILayout.EndHorizontal();
-       
+            GUI.enabled = true;
+            GUILayout.BeginHorizontal();
+            onefilePerMod = GUILayout.Toggle(onefilePerMod, "Make a unique file for each selected mod");
+            GUILayout.EndHorizontal();
+            if (outputFile.Length < 4 || outputFile.ToLower().Substring(outputFile.Length - 4) != ".csv")
+                outputFile += ".csv";
+
             GUILayout.BeginHorizontal();
             if (outputFile == "")
                 GUI.enabled = false;
             if (GUILayout.Button("Proceed"))
             {
-                OpenFile();
+                if (!onefilePerMod)
+                    OpenFile(outputFile);
                 GetUniqueModuleList();
                 DumpData();
-
-                Destroy(this);
+                completed = true;
+                //Destroy(this);
             }
             GUI.enabled = true;
             if (GUILayout.Button("Cancel"))
+            {
+                Destroy(this);
+            }
+            GUILayout.EndHorizontal();
+            GUI.DragWindow();
+        }
+
+        public void ExportCompleted(int id)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (onefilePerMod)
+                outputFile = allOutputfiles;
+            GUILayout.Label("Export completed.  File(s): " + outputFile);
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Acknowledged"))
             {
                 Destroy(this);
             }

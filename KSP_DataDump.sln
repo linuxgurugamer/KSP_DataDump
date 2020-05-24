@@ -8,9 +8,11 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0EC0C4ED-2BBD-48C3-9242-217EC8D50467}"
 	ProjectSection(SolutionItems) = preProject
 		buildRelease.bat = buildRelease.bat
+		Changelog.txt = Changelog.txt
 		deploy.bat = deploy.bat
 		jenkins.txt = jenkins.txt
 		KSP_DataDump.version = KSP_DataDump.version
+		Readme.md = Readme.md
 	EndProjectSection
 EndProject
 Global

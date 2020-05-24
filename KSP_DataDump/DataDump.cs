@@ -156,7 +156,7 @@ namespace KSP_DataDump
                     GUILayout.BeginHorizontal();
                     /*m.Value.enabled = */ GUILayout.Toggle(m.Value.enabled, "");
                    //GUI.enabled = m.Value.enabled && !propertiesVisible;
-                    if (GUILayout.Button(m.Value.type.Name, GUILayout.Width(200)))
+                    if (GUILayout.Button(m.Value.type.Name))
                     {
                         m.Value.enabled = !m.Value.enabled;
                         if (m.Value.enabled)
@@ -220,7 +220,9 @@ namespace KSP_DataDump
                             /* Field.fieldsList[field.Key].enabled = */GUILayout.Toggle(Field.fieldsList[field.Key].enabled, "");
 
                             str = s.name;
-                            string v = s.GetStringValue(s.host, true);
+                            string v = "";
+                            v = (string) s.GetStringValue(s.host, true);
+                           
                             //GUILayout.Label(str + " : " + Localizer.Format(v));
                              if (GUILayout.Button(str + " : " + Localizer.Format(v)))
                                 Field.fieldsList[field.Key].enabled = !Field.fieldsList[field.Key].enabled;

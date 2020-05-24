@@ -1,0 +1,10 @@
+Changelog
+
+0.0.0.0
+	Initial release
+
+0.0.0.1
+	Fixed a few bugs
+	Made button sizes flexible for the Module Selection window
+	Added code to suggest file name
+	Added code to write a unique file for each mod selected
