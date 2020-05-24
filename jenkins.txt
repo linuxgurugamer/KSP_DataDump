@@ -36,7 +36,7 @@
 # 3:SOURCEFILE, DESTDIR
 3:KSP_DataDump.version,GameData/KSP_DataDump
 #3:LICENSE.md,GameData/KerbalHotSeat
-3:Readme.md,GameData/KerbalHotSeat
+3:Readme.md,GameData/KSP_DataDump
 
 # 4:SOURCDIR, DESTDIR
 #4:Textures,GameData/ManeuverQueue/Textures
