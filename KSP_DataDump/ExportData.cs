@@ -85,6 +85,9 @@ namespace KSP_DataDump
             AppendLine("mass");
             AppendLine("bulkheadProfiles");
             AppendLine("CrewCapacity");
+            AppendLine("X");
+            AppendLine("Y");
+            AppendLine("Z");
 
             foreach (var m in Module.modulesList)
             {
@@ -152,6 +155,45 @@ namespace KSP_DataDump
             AppendLine(part.bulkheadProfiles);
             AppendLine(part.partPrefab.CrewCapacity);
 
+            //
+            // Now get the part dimensions: x,y,z
+            //
+            List<Bounds> list = new List<Bounds>();
+            if (!(part.partPrefab.Modules.GetModule<LaunchClamp>(0) != null))
+            {
+
+                Bounds[] partRendererBounds = PartGeometryUtil.GetPartRendererBounds(part.partPrefab);
+                int num = partRendererBounds.Length;
+                for (int j = 0; j < num; j++)
+                {
+                    Bounds bounds2 = partRendererBounds[j];
+                    Bounds bounds3 = bounds2;
+                    bounds3.size *= part.partPrefab.boundsMultiplier;
+                    Vector3 size = bounds3.size;
+                    bounds3.Expand(part.partPrefab.GetModuleSize(size, ModifierStagingSituation.CURRENT));
+                    list.Add(bounds2);
+                }
+            }
+
+            var pg = PartGeometryUtil.MergeBounds(list.ToArray(), part.partPrefab.transform.root).size;
+            AppendLine(pg.x.ToString("F3"));
+            AppendLine(pg.y.ToString("F3"));
+            AppendLine(pg.z.ToString("F3"));
+
+            string resources = "";
+            foreach (AvailablePart.ResourceInfo r in part.resourceInfos)
+            {
+                if (r.resourceName != "ElectricCharge" && r.resourceName != "Ablator")
+                    resources += r.resourceName + ",";
+            }
+            if (resources != "")
+            {
+
+                Log.Info("part: " + part.name + ", part.title: " + part.title + ", descr: " + part.description.Replace(",", ".") +
+                    ", mass: " + part.partPrefab.mass + ", techRequired: " + part.TechRequired +
+                    ", height x,y,z: " + pg.x.ToString() + ", " + pg.y.ToString() + ", " + pg.z.ToString() + "," + resources);
+            }
+
         }
         public void DumpData()
         {
@@ -172,7 +214,6 @@ namespace KSP_DataDump
                         for (int i = 0; i < MAXCOL; i++)
                             colData[i] = null;
 
-                        bool partDone = false;
                         foreach (PartModule module in part.partPrefab.Modules)
                         {
                             var a = module.GetType();
@@ -213,49 +254,48 @@ namespace KSP_DataDump
 
                                                 maxUsedCol = Math.Max(maxUsedCol, m.startingCol + cnt);
                                                 cnt++;
-                                                partDone = true;
                                             }
                                         }
                                     }
                                 }
                             }
                         }
-                        if (partDone)
+                    }
+                    {
+                        if (onefilePerMod)
                         {
-                            if (onefilePerMod)
+                            if (currentMod != partModName)
                             {
-                                if (currentMod != partModName)
-                                {
-                                    if (fs != null)
-                                        fs.Close();
-                                    outputFile = partModName + ".csv";
-                                    OpenFile(outputFile);
-                                    if (allOutputfiles != "")
-                                        allOutputfiles += ", " + outputFile;
-                                    else
-                                        allOutputfiles = outputFile;
-                                    byte[] bytes2 = Encoding.ASCII.GetBytes(headerLine.ToString());
-                                    fs.Write(bytes2, 0, headerLine.Length);
-                                    currentMod = partModName;
-                                }
-                            }
-                            Log.Info("maxUsedCol: " + maxUsedCol);
-                            //StringBuilder line = new StringBuilder("\"" + part.name + "\"");
-                            GetPartData(part);
-
-                            for (int f = colCnt; f <= maxUsedCol; f++)
-                            {
-                                if (colData[f] != null)
-                                    AppendLine(colData[f]);
+                                if (fs != null)
+                                    fs.Close();
+                                outputFile = partModName + ".csv";
+                                OpenFile(outputFile);
+                                if (allOutputfiles != "")
+                                    allOutputfiles += ", " + outputFile;
                                 else
-                                    AppendLine("");
-
+                                    allOutputfiles = outputFile;
+                                byte[] bytes2 = Encoding.ASCII.GetBytes(headerLine.ToString());
+                                fs.Write(bytes2, 0, headerLine.Length);
+                                currentMod = partModName;
                             }
-                            EndLine();
-                            byte[] bytes = Encoding.ASCII.GetBytes(line.ToString());
-                            fs.Write(bytes, 0, line.Length);
+                        }
+                        Log.Info("maxUsedCol: " + maxUsedCol);
+                        //StringBuilder line = new StringBuilder("\"" + part.name + "\"");
+                        GetPartData(part);
+
+                        for (int f = colCnt; f <= maxUsedCol; f++)
+                        {
+                            if (colData[f] != null)
+                                AppendLine(colData[f]);
+                            else
+                                AppendLine("");
 
                         }
+                        EndLine();
+                        byte[] bytes = Encoding.ASCII.GetBytes(line.ToString());
+                        fs.Write(bytes, 0, line.Length);
+
+
                     }
 
                 }
@@ -287,6 +327,7 @@ namespace KSP_DataDump
         string outputFile = "";
         string allOutputfiles = "";
         bool onefilePerMod = false;
+
         public void GetOutputFile(int id)
         {
             GUILayout.BeginHorizontal();

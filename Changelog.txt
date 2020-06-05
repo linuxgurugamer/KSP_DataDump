@@ -8,3 +8,10 @@ Changelog
 	Made button sizes flexible for the Module Selection window
 	Added code to suggest file name
 	Added code to write a unique file for each mod selected
+
+0.0.0.2
+	Fixed errors when trying to get a curve (disabled curve display)
+	Added part dimensions to output
+
+0.0.0.3
+	Now dumps all parts in a mod, even if no modules in it have been selected

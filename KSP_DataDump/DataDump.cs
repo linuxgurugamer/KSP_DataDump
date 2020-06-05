@@ -219,13 +219,20 @@ namespace KSP_DataDump
                             GUILayout.BeginHorizontal();
                             /* Field.fieldsList[field.Key].enabled = */GUILayout.Toggle(Field.fieldsList[field.Key].enabled, "");
 
+                            Log.Info("name: " + s.name);
                             str = s.name;
                             string v = "";
-                            v = (string) s.GetStringValue(s.host, true);
-                           
-                            //GUILayout.Label(str + " : " + Localizer.Format(v));
-                             if (GUILayout.Button(str + " : " + Localizer.Format(v)))
-                                Field.fieldsList[field.Key].enabled = !Field.fieldsList[field.Key].enabled;
+                            if (s.host != null)
+                            {
+                       
+                                if (!s.name.Contains("Curve"))
+                                {
+                                v = (string)s.GetStringValue(s.host, true);
+                                    //GUILayout.Label(str + " : " + Localizer.Format(v));
+                                    if (GUILayout.Button(str + " : " + Localizer.Format(v)))
+                                        Field.fieldsList[field.Key].enabled = !Field.fieldsList[field.Key].enabled;
+                                }
+                            }
                            GUILayout.EndHorizontal();
 
                         }
