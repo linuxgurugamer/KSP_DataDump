@@ -4,7 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Experimental.PlayerLoop;
-
+using static KSP_DataDump.DataDump;
+#if false
 namespace KSP_DataDump
 {
     public class KSP_DataDumpModule : PartModule
@@ -30,3 +31,4 @@ namespace KSP_DataDump
 
     }
 }
+#endif

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using KSP_Log;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,23 +7,38 @@ using System.Threading.Tasks;
 
 namespace KSP_DataDump
 {
+    public static class StringExtensions
+    {
+        public static bool Contains(this string source, string toCheck, StringComparison comp)
+        {
+            return source?.IndexOf(toCheck, comp) >= 0;
+        }
+    }
     public class Utils
     {
+        static Log Log;
         private static UrlDir.UrlConfig[] configs = null;
 
         static public string FindPartMod(AvailablePart part)
         {
+            if (Log == null)
+                Log = new Log("Utils", Log.LEVEL.INFO);
+            //UrlDir.UrlConfig config;
+
             if (configs == null)
                 configs = GameDatabase.Instance.GetConfigs("PART");
 
-            //Log.Info("ModFilterWindow.FindPartMod, part.name: " + part.name);
-            UrlDir.UrlConfig config = Array.Find<UrlDir.UrlConfig>(configs, (c => (part.name == c.name.Replace('_', '.').Replace(' ', '.'))));
+            Log.Info("ModFilterWindow.FindPartMod, part.name: " + part.name);
+
+            // Replaces underscores and spaces with a dot
+            UrlDir.UrlConfig config = Array.Find<UrlDir.UrlConfig>(configs, (c => (part.name == c.name.Replace('_', '.').Replace(' ', '.'))));            
             if (config == null)
             {
                 config = Array.Find<UrlDir.UrlConfig>(configs, (c => (part.name == c.name)));
                 if (config == null)
                     return "";
             }
+            
             var id = new UrlDir.UrlIdentifier(config.url);
             return id[0];
         }

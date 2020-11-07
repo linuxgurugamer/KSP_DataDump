@@ -3,13 +3,14 @@ using UnityEngine;
 using ToolbarControl_NS;
 using ClickThroughFix;
 using KSP.UI.Screens;
-using KSP.Localization;
-using System.CodeDom;
+using KSP_Log;
 
 namespace KSP_DataDump
 {
+
+
     [KSPAddon(KSPAddon.Startup.EditorAny, false)]
-    public class DataDump : MonoBehaviour
+     public partial class DataDump : MonoBehaviour
     {
         static internal ToolbarControl toolbarControl = null;
 
@@ -20,6 +21,7 @@ namespace KSP_DataDump
 
         internal const string MODID = "DataDump_ns";
         internal const string MODNAME = "KSP_DataDump";
+        bool partAttrVisible = false;
         bool modVisible = false;
         bool moduleVisible = false;
         bool propertiesVisible = false;
@@ -28,19 +30,34 @@ namespace KSP_DataDump
         Color origTextColor;
         Color origBackgroundColor;
         private Rect posModDataDumpWindow = new Rect(300, 50, WIDTH, MIN_HEIGHT);
+        private Rect posPartAttrDataDumpWindow = new Rect(300, 50, MODULES_WIDTH, MIN_HEIGHT);
         private Rect posModuleDataDumpWindow = new Rect(450, 450, MODULES_WIDTH, MIN_HEIGHT);
         private Rect posFieldsDumpWindow = new Rect(450, 450, MODULES_WIDTH, MIN_HEIGHT);
 
+        string partAttrSearchStr = "";
+        string fieldSearchStr = "";
+        string modSearchStr = "";
+        bool rememberField = false, rememberMod = false;
+        bool rememberPartAttrSearchStr = false;
+        internal static bool selectedModsAppliesToAll = false;
+        public static Log Log;
+
+        //public static bool volumeInfo = false;
+
+
         void Awake()
         {
-            Log.Info("Awake");
-
+#if DEBUG
+            Log = new Log("DataDump", Log.LEVEL.INFO);
+#else
+            Log = new Log("DataDump", Log.LEVEL.ERROR);
+#endif
         }
-
         void Start()
         {
             Log.Info("Start");
             AddToolbarButton();
+            Property.GetPartProperties();
         }
 
         void AddToolbarButton()
@@ -67,10 +84,29 @@ namespace KSP_DataDump
             if (modVisible)
                 Module.GetModuleList();
         }
-
+        public static Texture2D tex = null;
+        public static GUIStyle window;
+        public static GUIStyle buttonGreenStyle, buttonRedStyle;
         void OnGUI()
         {
-            GUI.skin = HighLogic.Skin;
+            // GUI.color = Color.grey;
+            if (tex == null)
+            {
+                window = new GUIStyle(HighLogic.Skin.window);
+                window.active.background = window.normal.background;
+
+                tex = window.normal.background; //.CreateReadable();
+                var pixels = tex.GetPixels32();
+
+                for (int i = 0; i < pixels.Length; ++i)
+                    pixels[i].a = 255;
+
+                tex.SetPixels32(pixels); tex.Apply();
+                window.active.background =
+                    window.focused.background =
+                    window.normal.background = tex;
+            }
+            //GUI.skin = HighLogic.Skin;
             if (!initted)
             {
                 labelTextColor = new GUIStyle("Label");
@@ -82,197 +118,77 @@ namespace KSP_DataDump
 
                 initted = true;
             }
-            if (modVisible)
+            if (partAttrVisible)
             {
-                posModDataDumpWindow = ClickThruBlocker.GUILayoutWindow(56783457, posModDataDumpWindow, DrawModList, "KSP DataDump Mod Selection",
-                   GUILayout.Width(WIDTH), GUILayout.MinHeight(MIN_HEIGHT), GUILayout.MaxHeight(MAX_HEIGHT));
+                posPartAttrDataDumpWindow = ClickThruBlocker.GUILayoutWindow(56783456, posPartAttrDataDumpWindow, DrawPartAttributes, "KSP Part Attribute Selection", window,
+                   GUILayout.Width(MODULES_WIDTH), GUILayout.MinHeight(MIN_HEIGHT), GUILayout.MaxHeight(MAX_HEIGHT));
 
             }
-            if (moduleVisible)
+            else
             {
-                posModuleDataDumpWindow = ClickThruBlocker.GUILayoutWindow(56783458, posModuleDataDumpWindow, DrawPartModuleList, "KSP DataDump Module Selection", GUILayout.Width(MODULES_WIDTH), GUILayout.MinHeight(MIN_HEIGHT), GUILayout.MaxHeight(MAX_HEIGHT));
-
-            }
-            if (propertiesVisible)
-            {
-                posFieldsDumpWindow = ClickThruBlocker.GUILayoutWindow(56783459, posFieldsDumpWindow, DrawFieldsList, "KSP DataDump Field Selection", GUILayout.Width(MODULES_WIDTH), GUILayout.MinHeight(MIN_HEIGHT), GUILayout.MaxHeight(MAX_HEIGHT));
-
-            }
-        }
-        Vector2 modScrollPos, moduleScrollPos, propertiesScrollPos;
-        void DrawModList(int id)
-        {
-            GUILayout.BeginHorizontal();
-            modScrollPos = GUILayout.BeginScrollView(modScrollPos);
-            GUI.enabled = !moduleVisible;
-            foreach (var m in modList)
-            {
-                GUILayout.BeginHorizontal();
-                /*m.Value.enabled = */ GUILayout.Toggle(m.Value.enabled, "");
-                //GUI.enabled = m.Value.enabled & !moduleVisible; ;
-                if (GUILayout.Button(m.Key))
+                if (modVisible)
                 {
-                    m.Value.enabled = !m.Value.enabled;
-                    if (m.Value.enabled)
-                    {
-                        moduleVisible = true;
+                    posModDataDumpWindow = ClickThruBlocker.GUILayoutWindow(56783457, posModDataDumpWindow, DrawModWindow, "KSP DataDump Mod Selection", window,
+                       GUILayout.Width(WIDTH), GUILayout.MinHeight(MIN_HEIGHT), GUILayout.MaxHeight(MAX_HEIGHT));
 
-                        activeMod = m.Key;
-                        //GetModuleList(true);
-                        posModuleDataDumpWindow.x = posModDataDumpWindow.x + posModDataDumpWindow.width;
-                        posModuleDataDumpWindow.y = posModDataDumpWindow.y;
-                    }
                 }
-                GUI.enabled = true;
-                GUILayout.EndHorizontal();
-            }
-            GUILayout.EndScrollView();
-            GUILayout.EndHorizontal();
-            GUI.enabled = !moduleVisible;
-
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Export"))
-            {
-                ExportData script = gameObject.AddComponent<ExportData>();
-            }
-            if (GUILayout.Button("Cancel"))
-            {
-                modVisible = false;
-                moduleVisible = false;
-            }
-            GUILayout.EndHorizontal();
-            GUI.enabled = true;
-            GUI.DragWindow();
-        }
-
-        void DrawPartModuleList(int id)
-        {
-            GUILayout.BeginHorizontal();
-            moduleScrollPos = GUILayout.BeginScrollView(moduleScrollPos);
-            foreach (var m in Module.modulesList)
-            {
-                if (m.Value.modName == activeMod)
+                if (moduleVisible)
                 {
-                    GUILayout.BeginHorizontal();
-                    /*m.Value.enabled = */ GUILayout.Toggle(m.Value.enabled, "");
-                   //GUI.enabled = m.Value.enabled && !propertiesVisible;
-                    if (GUILayout.Button(m.Value.type.Name))
-                    {
-                        m.Value.enabled = !m.Value.enabled;
-                        if (m.Value.enabled)
-                        {
-                            propertiesVisible = true;
-                            Property.GetProperties(m.Value.modName, m.Value);
+                    posModuleDataDumpWindow = ClickThruBlocker.GUILayoutWindow(56783458, posModuleDataDumpWindow, DrawPartModuleWindow, "KSP DataDump Module Selection", window, GUILayout.Width(MODULES_WIDTH), GUILayout.MinHeight(MIN_HEIGHT), GUILayout.MaxHeight(MAX_HEIGHT));
 
-                            posFieldsDumpWindow.x = posModuleDataDumpWindow.x;
-                            posFieldsDumpWindow.y = posModuleDataDumpWindow.y + posModuleDataDumpWindow.height;
-                        }
-                    }
-                    GUI.enabled = true;
-                    GUILayout.FlexibleSpace();
-                    GUILayout.EndHorizontal();
+                }
+                if (propertiesVisible)
+                {
+                    posFieldsDumpWindow = ClickThruBlocker.GUILayoutWindow(56783459, posFieldsDumpWindow, DrawModAttributesWindow, "KSP DataDump Attribute Selection", window, GUILayout.Width(MODULES_WIDTH), GUILayout.MinHeight(MIN_HEIGHT), GUILayout.MaxHeight(MAX_HEIGHT));
+
                 }
             }
-            GUILayout.EndScrollView();
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            GUI.enabled = !propertiesVisible;
-            if (GUILayout.Button("OK"))
-            {
-                moduleVisible = false;
-
-            }
-
-            if (GUILayout.Button("Cancel"))
-                moduleVisible = false;
-            GUILayout.EndHorizontal();
-            GUI.enabled = true;
-            GUI.DragWindow();
         }
 
-        void DrawFieldsList(int d)
+
+        bool GetFieldDescr(string f, out string v)
         {
-            GUILayout.BeginHorizontal();
-            BaseFieldList baseFieldList = null;
-            propertiesScrollPos = GUILayout.BeginScrollView(propertiesScrollPos);
-            foreach (var m in Property.propertyList)
+            bool goodToGo = true;
+            switch (f)
             {
-                if (m.Value.modname == activeMod && m.Value.moduleName == activeModule.moduleName && m.Value.fields != null)
-                {
-                    baseFieldList = m.Value.fields;
-                    string str = m.Value.name;
+                case "System.Single":
+                    v = "float";
+                    break;
+                case "System.Double":
+                    v = "double";
+                    break;
+                case "System.Int32":
+                    v = "int";
+                    break;
+                case "System.UInt32":
+                    v = "uint";
+                    break;
 
-                    if (m.Value.fields != null)
-                    {
-
-                        foreach (var s in m.Value.fields)
-                        {
-                            Field existingField = null;
-                            Field field = new Field(activeMod, activeModule.moduleName, s.name);
-                            if (!Field.fieldsList.TryGetValue(field.Key, out existingField))
-                            {
-                                Field.fieldsList.Add(field.Key, field);
-                            }
-                            else
-                                field = existingField;
-
-                            GUILayout.BeginHorizontal();
-                            /* Field.fieldsList[field.Key].enabled = */GUILayout.Toggle(Field.fieldsList[field.Key].enabled, "");
-
-                            Log.Info("name: " + s.name);
-                            str = s.name;
-                            string v = "";
-                            if (s.host != null)
-                            {
-                       
-                                if (!s.name.Contains("Curve"))
-                                {
-                                v = (string)s.GetStringValue(s.host, true);
-                                    //GUILayout.Label(str + " : " + Localizer.Format(v));
-                                    if (GUILayout.Button(str + " : " + Localizer.Format(v)))
-                                        Field.fieldsList[field.Key].enabled = !Field.fieldsList[field.Key].enabled;
-                                }
-                            }
-                           GUILayout.EndHorizontal();
-
-                        }
-                    }
-                }
-            }
-            GUILayout.EndScrollView();
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("OK"))
-            {
-                propertiesVisible = false;
-            }
-
-            if (GUILayout.Button("Select All"))
-            {
-                SetFieldValue(baseFieldList, Value.True);
-            }
-            if (GUILayout.Button("Select None"))
-            {
-                SetFieldValue(baseFieldList, Value.False);
+                case "System.String":
+                    v = "string";
+                    break;
+                case "System.Boolean":
+                    v = "boolean";
+                    break;
+                case "UnityEngine.Vector3":
+                    v = "Vector3";
+                    break;
+                default:
+                    goodToGo = false;
+                    v = "bad";
+                    break;
 
             }
-            if (GUILayout.Button("Toggle all"))
-            {
-                SetFieldValue(baseFieldList, Value.Toggle);
-
-            }
-            GUILayout.EndHorizontal();
-
-            GUI.DragWindow();
+            return goodToGo;
         }
 
         enum Value { False, True, Toggle };
-        void SetFieldValue(BaseFieldList baseFieldList, Value v)
+        void SetFieldValue(List<FldInfo> baseFieldList, Value v)
         {
             foreach (var s in baseFieldList)
             {
                 Field existingField = null;
-                Field field = new Field(activeMod, activeModule.moduleName, s.name);
+                Field field = new Field(activeMod, activeModule.moduleName, s.Name);
                 if (!Field.fieldsList.TryGetValue(field.Key, out existingField))
                 {
                     Log.Error("Impossible error 1");
@@ -310,11 +226,6 @@ namespace KSP_DataDump
         }
 
         public static Dictionary<string, DataValue> modList = new Dictionary<string, DataValue>();
-
-
-
-
-
 
     }
 }

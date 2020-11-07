@@ -8,6 +8,7 @@ Changelog
 	Made button sizes flexible for the Module Selection window
 	Added code to suggest file name
 	Added code to write a unique file for each mod selected
+	Added selection of attributes for the basic PART
 
 0.0.0.2
 	Fixed errors when trying to get a curve (disabled curve display)
@@ -15,3 +16,18 @@ Changelog
 
 0.0.0.3
 	Now dumps all parts in a mod, even if no modules in it have been selected
+
+0.0.0.4
+	Added searchstring to mod & field selection
+	Disabled showing of empty field names
+	changed skin to unity default
+	Fixed reflection to get all fields, not just KSPFields
+	Removed toggles from lists
+	Added color green to selected mods & modules
+	Added red X to selected mods & modules to remove from dump
+	Dependencies
+		ClickthroughBlocker
+		ToolbarController
+		SpacetuxLibrary
+	Added code to find properties which aren't in the AvailablePart class
+	Added code to ignore attributes & properties which begin with an '_'

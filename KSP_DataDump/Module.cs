@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static KSP_DataDump.DataDump;
 
 namespace KSP_DataDump
 {
@@ -15,6 +16,7 @@ namespace KSP_DataDump
         public System.Type type;
         public bool enabled;
         public PartModule module;
+
         public Module(string modName, string moduleName, System.Type type)
         {
             this.modName = modName;
@@ -23,7 +25,17 @@ namespace KSP_DataDump
 
             enabled = false;
         }
-        public string Key { get { return modName + "." + moduleName; } }
+
+        public string Key
+        {
+            get
+            {
+                if (DataDump.selectedModsAppliesToAll)
+                    return "PART." + moduleName; 
+                else
+                    return modName + "." + moduleName;
+            }
+        }
 
         static public void GetModuleList()
         {
@@ -43,12 +55,10 @@ namespace KSP_DataDump
                 }
 
                 Module.CheckPartForModules(partModName, part);
-                {
-                    //Log.Info("partModName: " + partModName);
-                }
+
+                //Log.Info("partModName: " + partModName);
             }
         }
-
 
         static public void CheckPartForModules(string modName, AvailablePart part)
         {
@@ -61,8 +71,16 @@ namespace KSP_DataDump
                     Log.Info(string.Format("{0} has a null moduleName, skipping it", part.name));
                     continue;
                 }
-                string moduleName = UsefulModuleName(fullName); // + "." + a.ToString();
-                Module mod = new Module(modName, moduleName, a);
+                //if (part.name == "KK_F9demo_mainEngine")
+                {
+                    Log.Info("CheckPartForModules, part: " + part.name + ", module: " + fullName);
+                }
+
+
+                string usefulModuleName = UsefulModuleName(fullName);
+                //Module mod = new Module(modName, usefulModuleName, a);
+                Module mod = new Module(modName, fullName, a);
+
                 mod.module = module;
                 if (!modulesList.ContainsKey(mod.Key))
                 {

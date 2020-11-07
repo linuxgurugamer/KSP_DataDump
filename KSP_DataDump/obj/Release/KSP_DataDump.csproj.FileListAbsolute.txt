@@ -6,3 +6,5 @@ D:\Users\jbb\github\KSP_DataDump\KSP_DataDump\obj\Release\KSP_DataDump.csproj.Co
 D:\Users\jbb\github\KSP_DataDump\KSP_DataDump\obj\Release\KSP_DataDump.csproj.CopyComplete
 D:\Users\jbb\github\KSP_DataDump\KSP_DataDump\obj\Release\KSP_DataDump.dll
 D:\Users\jbb\github\KSP_DataDump\KSP_DataDump\obj\Release\KSP_DataDump.pdb
+D:\Users\jbb\github\KSP_DataDump\KSP_DataDump\obj\Release\KSP_DataDump.csprojAssemblyReference.cache
+D:\Users\jbb\github\KSP_DataDump\KSP_DataDump\bin\Release\ClickThroughBlocker.pdb
