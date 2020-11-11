@@ -31,3 +31,6 @@ Changelog
 		SpacetuxLibrary
 	Added code to find properties which aren't in the AvailablePart class
 	Added code to ignore attributes & properties which begin with an '_'
+
+0.0.1.1
+	Fixed nullref during export due to not exporting all the partattrs

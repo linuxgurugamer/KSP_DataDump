@@ -96,11 +96,12 @@ namespace KSP_DataDump
                 {
                     if (!started)
                     {
+                        Log.Info("Started");
                         StartLine(partmod.moduleName + "." + s.Name);
                         started = true;
                         for (var partAttr = PartAttrEnum.first + 1; partAttr < PartAttrEnum.last; partAttr++)
                         {
-                            if (DataDump.partAttrs[(int)partAttr - 1].enabled)
+                            if (DataDump.partAttrs[(int)partAttr - 1] != null && DataDump.partAttrs[(int)partAttr - 1].enabled)
                             {
                                 if (partAttr == PartAttrEnum.DimensionsInfo)
                                 {
@@ -114,7 +115,7 @@ namespace KSP_DataDump
                                 }
                             }
                         }
-
+                        Log.Info("PartAttr completed");
                     }
                     Field field = new Field(partmod.modName, partmod.moduleName, s.Name);
                     if (ActiveLists.activeFieldsList.TryGetValue(field.ActiveKey, out field))
@@ -295,7 +296,7 @@ namespace KSP_DataDump
                         b = true;
                         for (var partAttr = PartAttrEnum.first + 1; partAttr < PartAttrEnum.last; partAttr++)
                         {
-                            if (DataDump.partAttrs[(int)partAttr - 1].enabled)
+                            if (DataDump.partAttrs[(int)partAttr - 1]!= null && DataDump.partAttrs[(int)partAttr - 1].enabled)
                             {
                                 if (partAttr == PartAttrEnum.DimensionsInfo)
                                 {
