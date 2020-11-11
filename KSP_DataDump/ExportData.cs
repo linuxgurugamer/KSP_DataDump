@@ -75,8 +75,6 @@ namespace KSP_DataDump
         {
             bool started = false;
 
-            Log.Info("GetUniqueModuleList");
-
             foreach (var f in ActiveLists.activeFieldsList)
                 if (f.Value.enabled)
                     Log.Info("fieldsList, key: " + f.Key + ", enabled: " + f.Value.enabled);
@@ -96,7 +94,6 @@ namespace KSP_DataDump
                 {
                     if (!started)
                     {
-                        Log.Info("Started");
                         StartLine(partmod.moduleName + "." + s.Name);
                         started = true;
                         for (var partAttr = PartAttrEnum.first + 1; partAttr < PartAttrEnum.last; partAttr++)
@@ -115,7 +112,6 @@ namespace KSP_DataDump
                                 }
                             }
                         }
-                        Log.Info("PartAttr completed");
                     }
                     Field field = new Field(partmod.modName, partmod.moduleName, s.Name);
                     if (ActiveLists.activeFieldsList.TryGetValue(field.ActiveKey, out field))
@@ -286,11 +282,11 @@ namespace KSP_DataDump
             //Log.Info("partConfig: " + part.partConfig);
             if (ActiveLists.activePropertyList.TryGetValue(Property.GetKey(partmod.modName, partmod.moduleName), out Property p))
             {
-                foreach (var s in p.fields) //FromReflection)
+                foreach (FldInfo s in p.fields) //FromReflection)
                 {
                     if (!b)
                     {
-                        string value = part.partConfig.GetValue(s.Name);
+                        //string value = part.partConfig.GetValue(s.Name);
 
                         
                         b = true;
@@ -307,13 +303,21 @@ namespace KSP_DataDump
                                 else
                                 {
                                     string str = "n/a";
-                                    str = part.partConfig.GetValue(partAttr.ToString());
+                                    str = "";
+                                    if (!part.partConfig.TryGetValue(partAttr.ToString(), ref str))
+                                    {
+                                        str = "";
+                                        Log.Error("data not found");
+                                    }
+
+                                    //str = part.partConfig.GetValue(partAttr.ToString());
 
                                     AppendLine(str);
                                 }
                             }
                         }
                     }
+
                     Field field = new Field(partmod.modName, partmod.moduleName, s.Name);
                     if (s.Name == "entryCost")
                         s.Name = "_entryCost";
@@ -399,7 +403,7 @@ namespace KSP_DataDump
                     }
                     else
                     {
-                        Log.Info("GetPartData, not found");
+                        Log.Error("GetPartData, not found");
                     }
                 }
             }
@@ -425,14 +429,9 @@ namespace KSP_DataDump
 
             foreach (AvailablePart part in loadedParts)
             {
-                if (part == null)
+                if (part == null || part.name.Length >= 9 && part.name.Substring(0, 9) == "kerbalEVA")
                     continue;
                 string[] colData = new string[MAXCOL];
-                //Log.Info("partURL: " + part.partUrl);
-                //if (part.partUrlConfig != null)
-                //    Log.Info("partUrlConfig: " + part.partUrlConfig.url);
-                //ConfigNode partNode = ConfigNode.Load(part.partUrl);
-                //Log.Info("partNode: " + partNode);
 
                 string partModName = Utils.FindPartMod(part);
                 if (partModName != "")
@@ -455,7 +454,6 @@ namespace KSP_DataDump
                             //Module mod = new Module(partModName, usefulModuleName, a);
                             Module mod = new Module(partModName, module.moduleName, a);
 
-                            Log.Info("mod.Key: " + mod.ActiveKey);
                             if (ActiveLists.activeModuleList.TryGetValue(mod.ActiveKey, out mod))
                             {
                                 if (moduleInfoList.ContainsKey(mod.moduleName))

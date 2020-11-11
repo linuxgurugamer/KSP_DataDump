@@ -34,3 +34,6 @@ Changelog
 
 0.0.1.1
 	Fixed nullref during export due to not exporting all the partattrs
+
+0.0.1.2
+	Fixed error caused by kerbalEVA parts
