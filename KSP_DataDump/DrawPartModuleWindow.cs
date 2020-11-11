@@ -12,36 +12,42 @@ namespace KSP_DataDump
     {
         void DrawPartModuleWindow(int id)
         {
+            GUI.enabled = !propertiesVisible;
+
             GUILayout.BeginHorizontal();
             moduleScrollPos = GUILayout.BeginScrollView(moduleScrollPos);
-            foreach (var m in Module.modulesList)
+            foreach (var m in ActiveLists.AllModulesList)
             {
-                if (/* selectedModsAppliesToAll || */ m.Value.modName == activeMod)
+                if ( m.Value.modName == activeMod)
                 {
                     if (modSearchStr == "" || m.Value.type.Name.Contains(modSearchStr, StringComparison.OrdinalIgnoreCase))
                     {
+                        Module activeModule;
+                        if (!ActiveLists.activeModuleList.TryGetValue(m.Value.ActiveKey, out activeModule))
+                            Log.Error("active module not found");
+
                         GUILayout.BeginHorizontal();
-                       // GUI.enabled = !m.Value.enabled;
-                        if (GUILayout.Button(m.Value.type.Name, m.Value.enabled ? buttonGreenStyle : GUI.skin.button))
+                        // GUI.enabled = !m.Value.enabled;
+                        if (GUILayout.Button(activeModule.type.Name, activeModule.enabled ? buttonGreenStyle : GUI.skin.button))
                         {
                             if (!rememberField)
                                 fieldSearchStr = "";
-                            m.Value.enabled = true;
-                            if (m.Value.enabled)
+                            activeModule.enabled = true;
+                            if (activeModule.enabled)
                             {
                                 propertiesVisible = true;
-                                Property.GetProperties(m.Value.modName, m.Value);
+                                Property.GetProperties(activeModule.modName, activeModule);
 
                                 posFieldsDumpWindow.x = posModuleDataDumpWindow.x;
                                 posFieldsDumpWindow.y = posModuleDataDumpWindow.y + posModuleDataDumpWindow.height;
                             }
                         }
                         //GUI.enabled = true;
-                        if (m.Value.enabled)
+                        if (activeModule.enabled)
                         {
                             GUILayout.FlexibleSpace();
                             if (GUILayout.Button("X", buttonRedStyle))
-                                m.Value.enabled = false;
+                                activeModule.enabled = false;
                         }
                         else
                             GUILayout.FlexibleSpace();
@@ -61,7 +67,6 @@ namespace KSP_DataDump
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUI.enabled = !propertiesVisible;
             if (GUILayout.Button("OK"))
             {
                 moduleVisible = false;

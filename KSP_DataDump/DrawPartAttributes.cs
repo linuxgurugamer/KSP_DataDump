@@ -35,24 +35,27 @@ namespace KSP_DataDump
                 }
                 GUILayout.EndHorizontal();
             }
+
+#if false
             GUILayout.BeginHorizontal();
             GUILayout.Label("=====================================");
             GUILayout.EndHorizontal();
 
-            foreach (var m in Property.propertyList)
+
+
+            foreach (var m in ActiveLists.activePropertyList)
             {
                 if (m.Value.modname == "PART" && m.Value.fields /* FromReflection */ != null)
                 {
                     baseFieldInfo = m.Value.fields; //  FromReflection;
 
-                    //Log.Info("m.Value.moduleName: " + m.Value.moduleName + ", Field: " + str + ", fields.Cnt: " + m.Value.fields.Count);
                     foreach (var s in m.Value.fields) //FromReflection)
                     {
                         Field existingField = null;
                         Field field = new Field(activeMod, activeModule.moduleName, s.Name);
-                        if (!Field.fieldsList.TryGetValue(field.Key, out existingField))
+                        if (!ActiveLists.activeFieldsList.TryGetValue(field.ActiveKey, out existingField))
                         {
-                            Field.fieldsList.Add(field.Key, field);
+                            ActiveLists.activeFieldsList.Add(field.ActiveKey, field);
                         }
                         else
                             field = existingField;
@@ -60,7 +63,7 @@ namespace KSP_DataDump
                             (partAttrSearchStr == "" || s.Name.Contains(partAttrSearchStr, StringComparison.OrdinalIgnoreCase)))
                         {
                             if (s.Name == "name")
-                                Field.fieldsList[field.Key].enabled = true;
+                                ActiveLists.activeFieldsList[field.ActiveKey].enabled = true;
 
                             var str = s.Name;
                             string v = "";
@@ -82,10 +85,9 @@ namespace KSP_DataDump
                                 {
                                     GUILayout.BeginHorizontal();
                                     //GUILayout.Toggle(Field.fieldsList[field.Key].enabled, "");
-                                    if (GUILayout.Button(str + " : " + Localizer.Format(v) + " : " + data, Field.fieldsList[field.Key].enabled ? buttonGreenStyle : GUI.skin.button))
+                                    if (GUILayout.Button(str + " : " + Localizer.Format(v) + " : " + data, ActiveLists.activeFieldsList[field.ActiveKey].enabled ? buttonGreenStyle : GUI.skin.button))
                                     {
-                                        Field.fieldsList[field.Key].enabled = !Field.fieldsList[field.Key].enabled;
-                                        Log.Info("field.Key: " + field.Key + ": " + Field.fieldsList[field.Key].enabled);
+                                        ActiveLists.activeFieldsList[field.ActiveKey].enabled = !ActiveLists.activeFieldsList[field.ActiveKey].enabled;
                                     }
                                     GUILayout.FlexibleSpace();
 
@@ -99,6 +101,7 @@ namespace KSP_DataDump
             }
             GUILayout.EndHorizontal();
             GUILayout.EndScrollView();
+
             GUILayout.BeginHorizontal();
             GUILayout.Label("Search: ");
 
@@ -107,6 +110,10 @@ namespace KSP_DataDump
             if (GUILayout.Button("Clear"))
                 partAttrSearchStr = "";
             GUILayout.EndHorizontal();
+#endif
+            GUILayout.EndScrollView();
+            GUILayout.EndHorizontal();
+
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("OK"))
             {
@@ -115,16 +122,29 @@ namespace KSP_DataDump
 
             if (GUILayout.Button("Select All"))
             {
-                SetFieldValue(baseFieldInfo, Value.True);
+                activeMod = "PART";
+                activeModule.moduleName = "PART";
+                for (var partAttr = PartAttrEnum.first + 1; partAttr < PartAttrEnum.last; partAttr++)
+                    partAttrs[(int)partAttr - 1].enabled = true;
+                 //   SetFieldValue(baseFieldInfo, Value.True);
             }
             if (GUILayout.Button("Select None"))
             {
-                SetFieldValue(baseFieldInfo, Value.False);
+                activeMod = "PART";
+                activeModule.moduleName = "PART";
+                for (var partAttr = PartAttrEnum.first + 1; partAttr < PartAttrEnum.last; partAttr++)
+                    partAttrs[(int)partAttr - 1].enabled = false;
+                //SetFieldValue(baseFieldInfo, Value.False);
 
             }
             if (GUILayout.Button("Toggle all"))
             {
-                SetFieldValue(baseFieldInfo, Value.Toggle);
+                activeMod = "PART";
+                activeModule.moduleName = "PART";
+                for (var partAttr = PartAttrEnum.first + 1; partAttr < PartAttrEnum.last; partAttr++)
+                    partAttrs[(int)partAttr - 1].enabled = !partAttrs[(int)partAttr - 1].enabled;
+
+                //SetFieldValue(baseFieldInfo, Value.Toggle);
 
             }
             GUILayout.EndHorizontal();

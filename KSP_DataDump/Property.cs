@@ -1,7 +1,8 @@
-﻿using KSP_Log;
+﻿
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using static KSP_DataDump.DataDump;
 
 
 namespace KSP_DataDump
@@ -33,22 +34,37 @@ namespace KSP_DataDump
         {
             this.modname = modname;
             this.moduleName = moduleName;
-           // this.fields = null;
-           // this.fieldsFromReflection = null;
+            // this.fields = null;
+            // this.fieldsFromReflection = null;
             enabled = false;
             fields = new List<FldInfo>();
         }
-        public string Key { get { return modname + "." + moduleName; } }
-        static public string GetKey(string modname, string moduleName)
+        private string Key { get { return modname + "." + moduleName; } }
+        private string CommonKey { get { return "PART." + moduleName; } }
+
+        public string ActiveKey
         {
-            return modname + "." + moduleName;
+            get
+            {
+                if (DataDump.selectedModsAppliesToAll)
+                    return CommonKey;
+                else
+                    return Key;
+            }
         }
 
-        static public SortedDictionary<string, Property> propertyList = new SortedDictionary<string, Property>();
+        static public string GetKey(string modname, string moduleName)
+        {
+            //return modname + "." + moduleName;
+            if (DataDump.selectedModsAppliesToAll)
+                return "PART." + moduleName;
+            else
+                return modname + "." + moduleName;
+        }
+
 
         static public void GetProperties(string modName, Module module)
         {
-            DataDump.activeMod = modName;
             DataDump.activeModule = module;
 
             var fields = module.type.GetFields(BindingFlags.FlattenHierarchy |
@@ -56,48 +72,48 @@ namespace KSP_DataDump
                                                             BindingFlags.Public | BindingFlags.NonPublic |
                                                             BindingFlags.Static);
             Property p = new Property(modName, module.moduleName);
-            if (!propertyList.ContainsKey(p.Key))
-                propertyList.Add(p.Key, p);
+
+            if (!ActiveLists.activePropertyList.ContainsKey(p.ActiveKey))
+                ActiveLists.activePropertyList.Add(p.ActiveKey, p);
+
             foreach (var f in fields)
-                p.fields.Add( new FldInfo( f.Name, f.FieldType));
-            //p.fieldsFromReflection = fields;
+                p.fields.Add(new FldInfo(f.Name, f.FieldType));
 
             foreach (PropertyInfo prop in module.type.GetProperties(BindingFlags.FlattenHierarchy |
                                     BindingFlags.Instance |
                                     BindingFlags.Public |
                                     BindingFlags.Static))
                 p.fields.Add(new FldInfo(prop.Name, prop.PropertyType));
-            
         }
 
         static public void GetPartProperties()
         {
             AvailablePart part = new AvailablePart();
             var partType = part.GetType();
-       
+
             DataDump.activeMod = "PART";
-            DataDump.activeModule = new Module("PART", "PART",partType)                ;
+            DataDump.activeModule = new Module("PART", "PART", partType);
 
             var fields = DataDump.activeModule.type.GetFields(BindingFlags.FlattenHierarchy |
                                                             BindingFlags.Instance |
-                                                            BindingFlags.Public | BindingFlags.NonPublic|
+                                                            BindingFlags.Public | BindingFlags.NonPublic |
                                                             BindingFlags.GetProperty |
                                                             BindingFlags.Static);
             Property p = new Property("PART", "PART");
-            if (!propertyList.ContainsKey(p.Key))
+            if (!ActiveLists.activePropertyList.ContainsKey(p.Key))
             {
-                propertyList.Add(p.Key, p);
+                ActiveLists.activePropertyList.Add(p.Key, p);
             }
             foreach (var f in fields)
-                p.fields.Add(new FldInfo( f.Name, f.FieldType));
+                p.fields.Add(new FldInfo(f.Name, f.FieldType));
 
-           // p.fieldsFromReflection = fields;
+            // p.fieldsFromReflection = fields;
 
             foreach (PropertyInfo prop in DataDump.activeModule.type.GetProperties(BindingFlags.FlattenHierarchy |
                                                 BindingFlags.Instance |
                                                 BindingFlags.Public |
-                                                BindingFlags.Static))               
-                    p.fields.Add(new FldInfo(prop.Name, prop.PropertyType));
+                                                BindingFlags.Static))
+                p.fields.Add(new FldInfo(prop.Name, prop.PropertyType));
         }
 
 

@@ -9,32 +9,31 @@ namespace KSP_DataDump
     {
         void DrawModAttributesWindow(int d)
         {
-          
+
+
+
             GUILayout.BeginHorizontal();
-           List<FldInfo> baseFieldInfo = null;
+            List<FldInfo> baseFieldInfo = null;
 
             propertiesScrollPos = GUILayout.BeginScrollView(propertiesScrollPos);
-            foreach (var m in Property.propertyList)
+            foreach (var m in ActiveLists.activePropertyList)
             {
-                if (m.Value.modname == activeMod && m.Value.moduleName == activeModule.moduleName) // && m.Value.fieldsFromReflection != null)
+                if ((selectedModsAppliesToAll || m.Value.modname == activeMod) && m.Value.moduleName == activeModule.moduleName) // && m.Value.fieldsFromReflection != null)
                 {
                     baseFieldInfo = m.Value.fields; // FromReflection;
 
-                    //Log.Info("m.Value.moduleName: " + m.Value.moduleName + ", Field: " + str + ", fields.Cnt: " + m.Value.fields.Count);
-                    foreach (var s in m.Value.fields ) //FromReflection)
+                    foreach (var s in m.Value.fields) //FromReflection)
                     {
                         Field existingField = null;
                         Field field = new Field(activeMod, activeModule.moduleName, s.Name);
-                        if (!Field.fieldsList.TryGetValue(field.Key, out existingField))
+                        if (!ActiveLists.activeFieldsList.TryGetValue(field.ActiveKey, out existingField))
                         {
-                            Field.fieldsList.Add(field.Key, field);
+                            ActiveLists.activeFieldsList.Add(field.ActiveKey, field);
                         }
                         else
                             field = existingField;
                         if (s.Name[0] != '_' && (fieldSearchStr == "" || s.Name.Contains(fieldSearchStr, StringComparison.OrdinalIgnoreCase)))
                         {
-                            Log.Info("Name: " + s.Name);
-
                             var str = s.Name;
                             string v = "";
                             string data = "";
@@ -55,10 +54,9 @@ namespace KSP_DataDump
                                 {
                                     GUILayout.BeginHorizontal();
                                     //GUILayout.Toggle(Field.fieldsList[field.Key].enabled, "");
-                                    if (GUILayout.Button(str + " : " + Localizer.Format(v) + " : " + data, Field.fieldsList[field.Key].enabled ? buttonGreenStyle : GUI.skin.button))
+                                    if (GUILayout.Button(str + " : " + Localizer.Format(v) + " : " + data, ActiveLists.activeFieldsList[field.ActiveKey].enabled ? buttonGreenStyle : GUI.skin.button))
                                     {
-                                        Field.fieldsList[field.Key].enabled = !Field.fieldsList[field.Key].enabled;
-                                        Log.Info("field.Key: " + field.Key + ": " + Field.fieldsList[field.Key].enabled);
+                                        ActiveLists.activeFieldsList[field.ActiveKey].enabled = !ActiveLists.activeFieldsList[field.ActiveKey].enabled;
                                     }
                                     GUILayout.FlexibleSpace();
 

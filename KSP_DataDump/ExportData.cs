@@ -8,8 +8,6 @@ using KSP.Localization;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using static KSP_DataDump.DataDump;
-using System.Linq;
-using UnityEngine.Experimental.XR;
 
 namespace KSP_DataDump
 {
@@ -79,29 +77,50 @@ namespace KSP_DataDump
 
             Log.Info("GetUniqueModuleList");
 
-            foreach (var f in Field.fieldsList)
-                Log.Info("fieldsList, key: " + f.Key + ", enabled: " + f.Value.enabled);
+            foreach (var f in ActiveLists.activeFieldsList)
+                if (f.Value.enabled)
+                    Log.Info("fieldsList, key: " + f.Key + ", enabled: " + f.Value.enabled);
 
             DataDump.activeMod = "PART";
             AvailablePart part = new AvailablePart();
             var a = part.GetType();
             Module partmod = new Module("PART", "PART", a);
-            StartLine("");
-            started = true;
-            Log.Info("partmod.modName: " + partmod.modName + ", partmod.moduleName: " + partmod.moduleName);
-            if (Property.propertyList.TryGetValue(Property.GetKey(partmod.modName, partmod.moduleName), out Property p))
+            //StartLine("");
+            //started = true;
+
+
+
+            if (ActiveLists.activePropertyList.TryGetValue(Property.GetKey(partmod.modName, partmod.moduleName), out Property p))
             {
                 foreach (var s in p.fields) //FromReflection)
                 {
+                    if (!started)
+                    {
+                        StartLine(partmod.moduleName + "." + s.Name);
+                        started = true;
+                        for (var partAttr = PartAttrEnum.first + 1; partAttr < PartAttrEnum.last; partAttr++)
+                        {
+                            if (DataDump.partAttrs[(int)partAttr - 1].enabled)
+                            {
+                                if (partAttr == PartAttrEnum.DimensionsInfo)
+                                {
+                                    AppendLine("X");
+                                    AppendLine("Y");
+                                    AppendLine("Z");
+                                }
+                                else
+                                {
+                                    AppendLine(PartAttrStr[(int)partAttr - 1] + "-pre");
+                                }
+                            }
+                        }
 
+                    }
                     Field field = new Field(partmod.modName, partmod.moduleName, s.Name);
-                    //Log.Info("field: " + s.Name + ", Key: " + field.Key);
-                    if (Field.fieldsList.TryGetValue(field.Key, out field))
+                    if (ActiveLists.activeFieldsList.TryGetValue(field.ActiveKey, out field))
                     {
                         if (field.enabled)
                         {
-                            Log.Info("field: " + s.Name + ", Key: " + field.Key);
-
                             if (!moduleInfoList.ContainsKey(partmod.moduleName))
                             {
                                 moduleInfoList.Add(partmod.modName, new ModuleInfo(partmod.moduleName, 1, colCnt));
@@ -112,24 +131,6 @@ namespace KSP_DataDump
                             }
                             if (!started)
                             {
-                                StartLine(partmod.moduleName + "." + s.Name);
-                                started = true;
-                                for (var partAttr = PartAttrEnum.first + 1; partAttr < PartAttrEnum.last; partAttr++)
-                                {
-                                    if (DataDump.partAttrs[(int)partAttr - 1].enabled)
-                                    {
-                                        if (partAttr == PartAttrEnum.DimensionsInfo)
-                                        {
-                                            AppendLine("X");
-                                            AppendLine("Y");
-                                            AppendLine("Z");
-                                        }
-                                        else
-                                        {
-                                            AppendLine(PartAttrStr[(int)partAttr - 1] + "-pre");
-                                        }
-                                    }
-                                }
                             }
                             else
                             {
@@ -139,36 +140,29 @@ namespace KSP_DataDump
                                 AppendLine(str + "." + s.Name);
                             }
                         }
-                        else
-                            Log.Info("Found, not Enabled Field, key: " + field.Key);
-
                     }
                 }
             }
 
+            Dictionary<string, string> colHeader = new Dictionary<string, string>();
 
-
-            foreach (var m in Module.modulesList)
+            foreach (var m in ActiveLists.activeModuleList)
             {
                 if (m.Value.enabled)
                 {
-                    Log.Info("enabled module: " + m.Key);
                     Module mod = m.Value;
 
-                    if (Property.propertyList.TryGetValue(Property.GetKey(mod.modName, mod.moduleName), out p))
+                    if (ActiveLists.activePropertyList.TryGetValue(Property.GetKey(mod.modName, mod.moduleName), out  p))
                     {
                         foreach (var s in p.fields) //FromReflection)
                         {
-
-                            Log.Info("field: " + s.Name);
                             Field field = new Field(mod.modName, mod.moduleName, s.Name);
-                            if (Field.fieldsList.TryGetValue(field.Key, out field))
+                            if (ActiveLists.activeFieldsList.TryGetValue(field.ActiveKey, out field))
                             {
                                 if (field.enabled)
                                 {
-                                    Log.Info("Enabled Field, key: " + field.Key);
                                     if (m.Value.moduleName == null)
-                                        Log.Info("moduleName 2 is null");
+                                        Log.Error("moduleName 2 is null");
                                     if (!moduleInfoList.ContainsKey(m.Value.moduleName))
                                     {
                                         moduleInfoList.Add(m.Value.moduleName, new ModuleInfo(m.Value.moduleName, 1, colCnt));
@@ -178,13 +172,18 @@ namespace KSP_DataDump
                                     {
                                         moduleInfoList[m.Value.moduleName].numFields++;
                                     }
-                                    if (!started)
+                                    string str = m.Value.moduleName + "." + s.Name;
+                                    if (!colHeader.ContainsKey(str))
                                     {
-                                        StartLine(m.Value.moduleName + "." + s.Name);
-                                        started = true;
+                                        colHeader.Add(str,str);
+                                        if (!started)
+                                        {
+                                            StartLine(m.Value.moduleName + "." + s.Name);
+                                            started = true;
+                                        }
+                                        else
+                                            AppendLine(m.Value.moduleName + "." + s.Name);
                                     }
-                                    else
-                                        AppendLine(m.Value.moduleName + "." + s.Name);
                                 }
                             }
                         }
@@ -197,12 +196,13 @@ namespace KSP_DataDump
             {
                 byte[] bytes = Encoding.ASCII.GetBytes(line.ToString());
                 fs.Write(bytes, 0, line.Length);
+#if false
                 foreach (var m in moduleInfoList)
                 {
                     Log.Info("Module: " + m.Value.moduleName + ", startingCol: " + m.Value.startingCol + ", numFields: " + m.Value.numFields);
                 }
                 Log.Info("headerLine: " + line.ToString());
-
+#endif
             }
             else
             {
@@ -279,17 +279,44 @@ namespace KSP_DataDump
 
             DataDump.activeMod = "PART";
             var a = part.GetType();
+            bool b = false;
             Module partmod = new Module("PART", "PART", a);
             // ConfigNode partNode = part.partConfig.GetNode("PART");
             //Log.Info("partConfig: " + part.partConfig);
-            if (Property.propertyList.TryGetValue(Property.GetKey(partmod.modName, partmod.moduleName), out Property p))
+            if (ActiveLists.activePropertyList.TryGetValue(Property.GetKey(partmod.modName, partmod.moduleName), out Property p))
             {
                 foreach (var s in p.fields) //FromReflection)
                 {
+                    if (!b)
+                    {
+                        string value = part.partConfig.GetValue(s.Name);
+
+                        
+                        b = true;
+                        for (var partAttr = PartAttrEnum.first + 1; partAttr < PartAttrEnum.last; partAttr++)
+                        {
+                            if (DataDump.partAttrs[(int)partAttr - 1].enabled)
+                            {
+                                if (partAttr == PartAttrEnum.DimensionsInfo)
+                                {
+                                    AppendLine(pg.x.ToString("F3"));
+                                    AppendLine(pg.y.ToString("F3"));
+                                    AppendLine(pg.z.ToString("F3"));
+                                }
+                                else
+                                {
+                                    string str = "n/a";
+                                    str = part.partConfig.GetValue(partAttr.ToString());
+
+                                    AppendLine(str);
+                                }
+                            }
+                        }
+                    }
                     Field field = new Field(partmod.modName, partmod.moduleName, s.Name);
                     if (s.Name == "entryCost")
                         s.Name = "_entryCost";
-                    if (Field.fieldsList.TryGetValue(field.Key, out field))
+                    if (ActiveLists.activeFieldsList.TryGetValue(field.ActiveKey, out field))
                     {
                         if (field != null && field.enabled)
                         {
@@ -355,45 +382,19 @@ namespace KSP_DataDump
                                                 break;
 
                                         }
-
-
-
                                         break;
                                     }
+                                    Log.Info("v: " + v);
                                 }
                             }
                             if (!started)
                             {
-                                StartLine(value);
-                                started = true;
-                                for (var partAttr = PartAttrEnum.first + 1; partAttr < PartAttrEnum.last; partAttr++)
-                                {
-                                    if (DataDump.partAttrs[(int)partAttr - 1].enabled)
-                                    {
-                                        if (partAttr == PartAttrEnum.DimensionsInfo)
-                                        {
-                                            AppendLine(pg.x.ToString("F3"));
-                                            AppendLine(pg.y.ToString("F3"));
-                                            AppendLine(pg.z.ToString("F3"));
-                                        }
-                                        else
-                                        {
-                                            string str = "n/a";
-                                            str = part.partConfig.GetValue(partAttr.ToString());
-
-                                            AppendLine(str);
-                                        }
-                                    }
-                                }
                             }
                             else
                                 AppendLine(value);
 
 
                         }
-                        else
-                            Log.Info("GetPartData Found, not Enabled Field, key: " + field.Key);
-
                     }
                     else
                     {
@@ -435,7 +436,7 @@ namespace KSP_DataDump
                 string partModName = Utils.FindPartMod(part);
                 if (partModName != "")
                 {
-                    if (DataDump.modList.TryGetValue(partModName, out DataDump.DataValue dv) && dv.enabled)
+                    if (ActiveLists.modList.TryGetValue(partModName, out DataValue dv) && dv.enabled)
                     {
                         for (int i = 0; i < MAXCOL; i++)
                             colData[i] = null;
@@ -453,46 +454,40 @@ namespace KSP_DataDump
                             //Module mod = new Module(partModName, usefulModuleName, a);
                             Module mod = new Module(partModName, module.moduleName, a);
 
-                            Log.Info("mod.Key: " + mod.Key);
-                            if (Module.modulesList.TryGetValue(mod.Key, out mod))
+                            Log.Info("mod.Key: " + mod.ActiveKey);
+                            if (ActiveLists.activeModuleList.TryGetValue(mod.ActiveKey, out mod))
                             {
                                 if (moduleInfoList.ContainsKey(mod.moduleName))
                                 {
                                     var m = moduleInfoList[mod.moduleName];
                                     int cnt = 0;
-                                    if (Property.propertyList.TryGetValue(Property.GetKey(mod.modName, mod.moduleName), out Property p))
+                                    if (ActiveLists.activePropertyList.TryGetValue(Property.GetKey(mod.modName, mod.moduleName), out Property p))
                                     {
                                         foreach (var s in p.fields) //FromReflection)
                                         {
 
                                             Field field = new Field(mod.modName, mod.moduleName, s.Name);
-                                            if (Field.fieldsList.TryGetValue(field.Key, out field))
+                                            if (ActiveLists.activeFieldsList.TryGetValue(field.ActiveKey, out field))
                                             {
                                                 if (field.enabled)
                                                 {
-                                                    Field.fieldsList[field.Key].enabled = GUILayout.Toggle(Field.fieldsList[field.Key].enabled, "");
+                                                    ActiveLists.activeFieldsList[field.ActiveKey].enabled = GUILayout.Toggle(ActiveLists.activeFieldsList[field.ActiveKey].enabled, "");
                                                     string v = "unknownData";
-                                                    Log.Info("modKey 1");
                                                     if (part.partConfig != null)
                                                     {
                                                         var moduleNodes = part.partConfig.GetNodes("MODULE");
-                                                        Log.Info("modKey 2");
                                                         if (moduleNodes == null)
-                                                            Log.Info("moduleNodes is null");
+                                                            Log.Error("moduleNodes is null");
                                                         foreach (var moduleNode in moduleNodes)
                                                         {
-                                                            Log.Info("modKey 3");
                                                             var name = moduleNode.GetValue("name");
                                                             if (name != null && name == module.moduleName)
                                                             {
-                                                                Log.Info("modKey 4");
                                                                 moduleNode.TryGetValue(s.Name, ref v);
-                                                                Log.Info("modKey 4: " + v);
                                                                 break;
                                                             }
                                                         }
                                                     }
-                                                    Log.Info("modKey 5");
 
                                                     colData[m.startingCol + cnt] = Localizer.Format(v);
 
@@ -522,8 +517,6 @@ namespace KSP_DataDump
                                 currentMod = partModName;
                             }
                         }
-                        Log.Info("maxUsedCol: " + maxUsedCol);
-                        //StringBuilder line = new StringBuilder("\"" + part.name + "\"");
                         GetPartData(part);
 
                         for (int f = colCnt; f <= maxUsedCol; f++)
@@ -544,9 +537,27 @@ namespace KSP_DataDump
             fs.Close();
 
         }
+#if false
+        Dictionary<string, Module> activeModuleList;
+        SortedDictionary<string, Property> activePropertyList = null;
+
+        void SetActiveModuleList()
+        {
+            if (selectedModsAppliesToAll)
+                activeModuleList = Module.commonModulesList;
+            else
+                activeModuleList = Module.modulesList;
+            if (selectedModsAppliesToAll)
+                activePropertyList = Property.commonPropertyList;
+            else
+                activePropertyList = activePropertyList;
+        }
+#endif
+
         public void Start()
         {
-            foreach (var m in Module.modulesList)
+            //SetActiveModuleList();
+            foreach (var m in ActiveLists.activeModuleList)
             {
                 if (m.Value.enabled)
                 {

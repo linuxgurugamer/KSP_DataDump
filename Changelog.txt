@@ -17,7 +17,7 @@ Changelog
 0.0.0.3
 	Now dumps all parts in a mod, even if no modules in it have been selected
 
-0.0.0.4
+0.0.1
 	Added searchstring to mod & field selection
 	Disabled showing of empty field names
 	changed skin to unity default

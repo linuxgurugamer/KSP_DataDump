@@ -9,8 +9,6 @@ namespace KSP_DataDump
 {
     public class Module
     {
-        public static Dictionary<string, Module> modulesList = new Dictionary<string, Module>();
-
         public string modName;
         public string moduleName;
         public System.Type type;
@@ -26,17 +24,26 @@ namespace KSP_DataDump
             enabled = false;
         }
 
-        public string Key
+        public string ModuleToString()
+        {
+            return ((modName != null ? modName : "null" )+ ":" + type.ToString() + ":" + enabled.ToString() + ":" +
+                (moduleName != null ? moduleName : "null"));
+        }
+
+        string Key { get { return modName + "." + moduleName; } }
+
+        string CommonKey { get { return "PART." + moduleName; } }
+
+        public string ActiveKey
         {
             get
             {
                 if (DataDump.selectedModsAppliesToAll)
-                    return "PART." + moduleName; 
+                    return CommonKey;
                 else
-                    return modName + "." + moduleName;
+                    return Key;
             }
         }
-
         static public void GetModuleList()
         {
             List<AvailablePart> loadedParts = Utils.GetPartsList();
@@ -45,18 +52,20 @@ namespace KSP_DataDump
             {
                 if (part == null)
                     continue;
-                string partModName = Utils.FindPartMod(part);
+                string partModName;
+                if (DataDump.selectedModsAppliesToAll)
+                    partModName = "PART";
+                else
+                    partModName = Utils.FindPartMod(part);
                 if (partModName != "")
                 {
-                    if (!DataDump.modList.ContainsKey(partModName))
+                    if (!ActiveLists.modList.ContainsKey(partModName))
                     {
-                        DataDump.modList.Add(partModName, new DataDump.DataValue(false));
+                        ActiveLists.modList.Add(partModName, new DataValue(false));
                     }
                 }
 
                 Module.CheckPartForModules(partModName, part);
-
-                //Log.Info("partModName: " + partModName);
             }
         }
 
@@ -68,12 +77,8 @@ namespace KSP_DataDump
                 string fullName = module.moduleName;
                 if (fullName == null)
                 {
-                    Log.Info(string.Format("{0} has a null moduleName, skipping it", part.name));
+                    Log.Error(string.Format("{0} has a null moduleName, skipping it", part.name));
                     continue;
-                }
-                //if (part.name == "KK_F9demo_mainEngine")
-                {
-                    Log.Info("CheckPartForModules, part: " + part.name + ", module: " + fullName);
                 }
 
 
@@ -82,9 +87,11 @@ namespace KSP_DataDump
                 Module mod = new Module(modName, fullName, a);
 
                 mod.module = module;
-                if (!modulesList.ContainsKey(mod.Key))
+                if (!ActiveLists.activeModuleList.ContainsKey(mod.ActiveKey))
                 {
-                    modulesList.Add(mod.Key, mod);
+                    // Needs to do another "new" here to have a unique entry inthe commonModulesList
+                    mod = new Module(modName, fullName, a);
+                    ActiveLists.activeModuleList.Add(mod.ActiveKey, mod);
                 }
             }
         }

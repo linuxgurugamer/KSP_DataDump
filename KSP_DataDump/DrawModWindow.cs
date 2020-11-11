@@ -8,9 +8,11 @@ namespace KSP_DataDump
         void DrawModWindow(int id)
         {
             GUILayout.BeginHorizontal();
+            GUI.enabled = !moduleVisible;
+
             modScrollPos = GUILayout.BeginScrollView(modScrollPos);
-            if (GUILayout.Button(selectedModsAppliesToAll ? "Selected Moduless Applies To All Parts" : "Selected Modules Only"))
-                selectedModsAppliesToAll = !selectedModsAppliesToAll;
+            if (GUILayout.Button(selectedModsAppliesToAll ? "Selected Modules Applies To All Parts" : "Selected Modules Only"))
+                activeLists.SetActiveModuleList(!selectedModsAppliesToAll);
             if (GUILayout.Button("Part Attributes"))
             {
                 partAttrVisible = !partAttrVisible;
@@ -19,7 +21,7 @@ namespace KSP_DataDump
                 posPartAttrDataDumpWindow.x = posModDataDumpWindow.x + posModDataDumpWindow.width;
                 posPartAttrDataDumpWindow.y = posModDataDumpWindow.y;
             }
-            foreach (var m in modList)
+            foreach (var m in ActiveLists.modList)
             {
                 GUILayout.BeginHorizontal();
                 //GUI.enabled = !m.Value.enabled && !rememberPartAttrSearchStr;
@@ -52,7 +54,6 @@ namespace KSP_DataDump
             }
             GUILayout.EndScrollView();
             GUILayout.EndHorizontal();
-            GUI.enabled = !moduleVisible;
 
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Export"))

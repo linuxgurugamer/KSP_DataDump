@@ -1,9 +1,6 @@
-﻿using KSP_Log;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using static KSP_DataDump.DataDump;
 
 namespace KSP_DataDump
 {
@@ -16,19 +13,12 @@ namespace KSP_DataDump
     }
     public class Utils
     {
-        static Log Log;
         private static UrlDir.UrlConfig[] configs = null;
 
         static public string FindPartMod(AvailablePart part)
         {
-            if (Log == null)
-                Log = new Log("Utils", Log.LEVEL.INFO);
-            //UrlDir.UrlConfig config;
-
             if (configs == null)
                 configs = GameDatabase.Instance.GetConfigs("PART");
-
-            Log.Info("ModFilterWindow.FindPartMod, part.name: " + part.name);
 
             // Replaces underscores and spaces with a dot
             UrlDir.UrlConfig config = Array.Find<UrlDir.UrlConfig>(configs, (c => (part.name == c.name.Replace('_', '.').Replace(' ', '.'))));            

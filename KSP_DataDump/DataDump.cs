@@ -10,9 +10,9 @@ namespace KSP_DataDump
 
 
     [KSPAddon(KSPAddon.Startup.EditorAny, false)]
-     public partial class DataDump : MonoBehaviour
+    public partial class DataDump : MonoBehaviour
     {
-        static internal ToolbarControl toolbarControl = null;
+        ToolbarControl toolbarControl = null;
 
         const float WIDTH = 300;
         const float MODULES_WIDTH = 400;
@@ -25,10 +25,10 @@ namespace KSP_DataDump
         bool modVisible = false;
         bool moduleVisible = false;
         bool propertiesVisible = false;
-        bool initted = false;
-        GUIStyle labelTextColor;
-        Color origTextColor;
-        Color origBackgroundColor;
+        //bool initted = false;
+        static internal GUIStyle labelTextColor;
+        static internal Color origTextColor;
+        static internal Color origBackgroundColor;
         private Rect posModDataDumpWindow = new Rect(300, 50, WIDTH, MIN_HEIGHT);
         private Rect posPartAttrDataDumpWindow = new Rect(300, 50, MODULES_WIDTH, MIN_HEIGHT);
         private Rect posModuleDataDumpWindow = new Rect(450, 450, MODULES_WIDTH, MIN_HEIGHT);
@@ -42,7 +42,10 @@ namespace KSP_DataDump
         internal static bool selectedModsAppliesToAll = false;
         public static Log Log;
 
-        //public static bool volumeInfo = false;
+        static public ActiveLists activeLists;
+
+        static public string activeMod;
+        static public Module activeModule;
 
 
         void Awake()
@@ -52,23 +55,30 @@ namespace KSP_DataDump
 #else
             Log = new Log("DataDump", Log.LEVEL.ERROR);
 #endif
+            Log.Info("Awake");
         }
         void Start()
         {
             Log.Info("Start");
             AddToolbarButton();
-            Property.GetPartProperties();
+
+            activeLists = new ActiveLists();
         }
 
+        void OnDestroy()
+        {
+            Log.Info("OnDestroy");
+            toolbarControl.OnDestroy();
+            Destroy(toolbarControl);
+        }
         void AddToolbarButton()
         {
-            if (toolbarControl == null)
+            Log.Info("AddToolbarButton");
+            //    if (toolbarControl == null)
             {
                 toolbarControl = gameObject.AddComponent<ToolbarControl>();
                 toolbarControl.AddToAllToolbars(GUIButtonToggle, GUIButtonToggle,
-                    ApplicationLauncher.AppScenes.SPH |
-                    ApplicationLauncher.AppScenes.VAB |
-                    ApplicationLauncher.AppScenes.SPACECENTER,
+                    ApplicationLauncher.AppScenes.SPH | ApplicationLauncher.AppScenes.VAB,
                     MODID,
                     "dataDumpButton",
                     "KSP_DataDump/PluginData/DataDump-38",
@@ -81,14 +91,15 @@ namespace KSP_DataDump
         void GUIButtonToggle()
         {
             modVisible = !modVisible;
-            if (modVisible)
-                Module.GetModuleList();
         }
+
         public static Texture2D tex = null;
         public static GUIStyle window;
         public static GUIStyle buttonGreenStyle, buttonRedStyle;
+
         void OnGUI()
         {
+#if false
             // GUI.color = Color.grey;
             if (tex == null)
             {
@@ -118,6 +129,7 @@ namespace KSP_DataDump
 
                 initted = true;
             }
+#endif
             if (partAttrVisible)
             {
                 posPartAttrDataDumpWindow = ClickThruBlocker.GUILayoutWindow(56783456, posPartAttrDataDumpWindow, DrawPartAttributes, "KSP Part Attribute Selection", window,
@@ -134,7 +146,7 @@ namespace KSP_DataDump
                 }
                 if (moduleVisible)
                 {
-                    posModuleDataDumpWindow = ClickThruBlocker.GUILayoutWindow(56783458, posModuleDataDumpWindow, DrawPartModuleWindow, "KSP DataDump Module Selection", window, GUILayout.Width(MODULES_WIDTH), GUILayout.MinHeight(MIN_HEIGHT), GUILayout.MaxHeight(MAX_HEIGHT));
+                    posModuleDataDumpWindow = ClickThruBlocker.GUILayoutWindow(56783458, posModuleDataDumpWindow, DrawPartModuleWindow, "KSP DataDump Part Module Selection", window, GUILayout.Width(MODULES_WIDTH), GUILayout.MinHeight(MIN_HEIGHT), GUILayout.MaxHeight(MAX_HEIGHT));
 
                 }
                 if (propertiesVisible)
@@ -189,7 +201,7 @@ namespace KSP_DataDump
             {
                 Field existingField = null;
                 Field field = new Field(activeMod, activeModule.moduleName, s.Name);
-                if (!Field.fieldsList.TryGetValue(field.Key, out existingField))
+                if (!ActiveLists.activeFieldsList.TryGetValue(field.ActiveKey, out existingField))
                 {
                     Log.Error("Impossible error 1");
                 }
@@ -198,13 +210,13 @@ namespace KSP_DataDump
                 switch (v)
                 {
                     case Value.False:
-                        Field.fieldsList[field.Key].enabled = false;
+                        ActiveLists.activeFieldsList[field.ActiveKey].enabled = false;
                         break;
                     case Value.True:
-                        Field.fieldsList[field.Key].enabled = true;
+                        ActiveLists.activeFieldsList[field.ActiveKey].enabled = true;
                         break;
                     case Value.Toggle:
-                        Field.fieldsList[field.Key].enabled = !Field.fieldsList[field.Key].enabled;
+                        ActiveLists.activeFieldsList[field.ActiveKey].enabled = !ActiveLists.activeFieldsList[field.ActiveKey].enabled;
                         break;
 
                 }
@@ -212,20 +224,6 @@ namespace KSP_DataDump
 
         }
 
-        static public string activeMod;
-        static public Module activeModule;
-
-
-        public class DataValue
-        {
-            public bool enabled;
-            public DataValue(bool e)
-            {
-                enabled = e;
-            }
-        }
-
-        public static Dictionary<string, DataValue> modList = new Dictionary<string, DataValue>();
 
     }
 }
