@@ -575,7 +575,7 @@ namespace KSP_DataDump
             else
                 winPos = ClickThruBlocker.GUILayoutWindow(57382457, winPos, ExportCompleted, "KSP DataDump Output", DataDump.window);
         }
-        string outputFile = "";
+        string outputFile = "DataDump";
         string maxLenStr = "80";
         int maxLen = 80;
         string allOutputfiles = "";
@@ -605,7 +605,7 @@ namespace KSP_DataDump
                 outputFile += ".csv";
 
             GUILayout.BeginHorizontal();
-            if (outputFile == "")
+            if (outputFile == ".csv" || outputFile == "")
                 GUI.enabled = false;
             if (GUILayout.Button("Proceed"))
             {

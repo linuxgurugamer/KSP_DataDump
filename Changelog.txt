@@ -37,3 +37,4 @@ Changelog
 
 0.0.1.2
 	Fixed error caused by kerbalEVA parts
+	Added code to prevent filenames of ".csv"
