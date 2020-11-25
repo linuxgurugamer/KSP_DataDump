@@ -329,24 +329,16 @@ namespace KSP_DataDump
                                         AppendLine(pg.z.ToString("F3"));
                                         break;
                                     case PartAttrEnum.Resources:
-                                        var nodes = part.partConfig.GetNodes("RESOURCE").ToList().OrderBy(r => r.name);
+                                        var nodes = part.partConfig.GetNodes("RESOURCE").ToList().OrderBy(r => r.GetValue("name"));
                                         int cnt = 0;
                                         foreach (var n in nodes)
                                         {
-                                            foreach (AvailablePart.ResourceInfo r in part.resourceInfos)
-                                            {
-                                                string name = n.GetValue("name");
-                                                if (name == r.resourceName)
-                                                {
-                                                    string maxAmount = n.GetValue("maxAmount");
+                                            string name = n.GetValue("name");
+                                            string maxAmount = n.GetValue("maxAmount");
 
-                                                    if (cnt < maxResources)
-                                                        AppendLine(name + ":" + maxAmount);
-                                                    cnt++;
-                                                    if (cnt >= maxResources) break;
-
-                                                }
-                                            }
+                                            if (cnt < maxResources)
+                                                AppendLine(name + ":" + maxAmount);
+                                            cnt++;
                                             if (cnt >= maxResources) break;
                                         }
                                         break;
