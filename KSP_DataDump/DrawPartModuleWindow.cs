@@ -45,7 +45,12 @@ namespace KSP_DataDump
                         //GUI.enabled = true;
                         if (activeModule.enabled)
                         {
+                            GUI.enabled = true;
                             GUILayout.FlexibleSpace();
+                            activeModule.multipleModules =
+                                GUILayout.Toggle(activeModule.multipleModules, activeModule.multipleModules? "2 possible":"1 module");
+                            GUI.enabled = !propertiesVisible;
+                            //GUILayout.FlexibleSpace();
                             if (GUILayout.Button("X", buttonRedStyle))
                                 activeModule.enabled = false;
                         }

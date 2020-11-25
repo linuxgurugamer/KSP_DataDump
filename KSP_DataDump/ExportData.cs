@@ -9,6 +9,8 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using static KSP_DataDump.DataDump;
 
+using System.Linq;
+
 namespace KSP_DataDump
 {
     public class ExportData : MonoBehaviour
@@ -32,12 +34,13 @@ namespace KSP_DataDump
             internal string moduleName;
             internal int numFields;
             internal int startingCol;
-
-            internal ModuleInfo(string moduleName, int numFields, int startingCol)
+            internal bool secondModule;
+            internal ModuleInfo(string moduleName, int numFields, int startingCol, int moduleNum)
             {
                 this.moduleName = moduleName;
                 this.numFields = numFields;
                 this.startingCol = startingCol;
+                secondModule = (moduleNum == 1);
             }
 
         }
@@ -75,9 +78,11 @@ namespace KSP_DataDump
         {
             bool started = false;
 
+#if DEBUG
             foreach (var f in ActiveLists.activeFieldsList)
                 if (f.Value.enabled)
                     Log.Info("fieldsList, key: " + f.Key + ", enabled: " + f.Value.enabled);
+#endif
 
             DataDump.activeMod = "PART";
             AvailablePart part = new AvailablePart();
@@ -108,7 +113,7 @@ namespace KSP_DataDump
                                 }
                                 else
                                 {
-                                    AppendLine(PartAttrStr[(int)partAttr - 1] + "-pre");
+                                    AppendLine(PartAttrStr[(int)partAttr - 1] /* + "-pre" */);
                                 }
                             }
                         }
@@ -120,7 +125,7 @@ namespace KSP_DataDump
                         {
                             if (!moduleInfoList.ContainsKey(partmod.moduleName))
                             {
-                                moduleInfoList.Add(partmod.modName, new ModuleInfo(partmod.moduleName, 1, colCnt));
+                                moduleInfoList.Add(partmod.modName, new ModuleInfo(partmod.moduleName, 1, colCnt, 0));
                             }
                             else
                             {
@@ -148,38 +153,41 @@ namespace KSP_DataDump
                 if (m.Value.enabled)
                 {
                     Module mod = m.Value;
-
-                    if (ActiveLists.activePropertyList.TryGetValue(Property.GetKey(mod.modName, mod.moduleName), out  p))
+                    for (int i = 0; i < (mod.multipleModules ? 2 : 1); i++)
                     {
-                        foreach (var s in p.fields) //FromReflection)
+                        Log.Info("mod.multipleModules: " + mod.multipleModules);
+                        if (ActiveLists.activePropertyList.TryGetValue(Property.GetKey(mod.modName, mod.moduleName), out p))
                         {
-                            Field field = new Field(mod.modName, mod.moduleName, s.Name);
-                            if (ActiveLists.activeFieldsList.TryGetValue(field.ActiveKey, out field))
+                            foreach (var s in p.fields) //FromReflection)
                             {
-                                if (field.enabled)
+                                Field field = new Field(mod.modName, mod.moduleName, s.Name);
+                                if (ActiveLists.activeFieldsList.TryGetValue(field.ActiveKey, out field))
                                 {
-                                    if (m.Value.moduleName == null)
-                                        Log.Error("moduleName 2 is null");
-                                    if (!moduleInfoList.ContainsKey(m.Value.moduleName))
+                                    if (field.enabled)
                                     {
-                                        moduleInfoList.Add(m.Value.moduleName, new ModuleInfo(m.Value.moduleName, 1, colCnt));
-
-                                    }
-                                    else
-                                    {
-                                        moduleInfoList[m.Value.moduleName].numFields++;
-                                    }
-                                    string str = m.Value.moduleName + "." + s.Name;
-                                    if (!colHeader.ContainsKey(str))
-                                    {
-                                        colHeader.Add(str,str);
-                                        if (!started)
+                                        if (mod.moduleName == null)
+                                            Log.Error("moduleName 2 is null");
+                                        if (!moduleInfoList.ContainsKey(mod.ModuleInfoKey(i)))
                                         {
-                                            StartLine(m.Value.moduleName + "." + s.Name);
-                                            started = true;
+                                            moduleInfoList.Add(mod.ModuleInfoKey(i), new ModuleInfo(mod.moduleName, 1, colCnt, i));
+
                                         }
                                         else
-                                            AppendLine(m.Value.moduleName + "." + s.Name);
+                                        {
+                                            moduleInfoList[mod.ModuleInfoKey(i)].numFields++;
+                                        }
+                                        string str = mod.moduleName + (i==0?"":"-2")+ "." + s.Name;
+                                        if (!colHeader.ContainsKey(str))
+                                        {
+                                            colHeader.Add(str, str);
+                                            if (!started)
+                                            {
+                                                StartLine(m.Value.moduleName + "." + s.Name);
+                                                started = true;
+                                            }
+                                            else
+                                                AppendLine(m.Value.moduleName + "." + s.Name);
+                                        }
                                     }
                                 }
                             }
@@ -288,11 +296,11 @@ namespace KSP_DataDump
                     {
                         //string value = part.partConfig.GetValue(s.Name);
 
-                        
+
                         b = true;
                         for (var partAttr = PartAttrEnum.first + 1; partAttr < PartAttrEnum.last; partAttr++)
                         {
-                            if (DataDump.partAttrs[(int)partAttr - 1]!= null && DataDump.partAttrs[(int)partAttr - 1].enabled)
+                            if (DataDump.partAttrs[(int)partAttr - 1] != null && DataDump.partAttrs[(int)partAttr - 1].enabled)
                             {
                                 if (partAttr == PartAttrEnum.DimensionsInfo)
                                 {
@@ -432,37 +440,45 @@ namespace KSP_DataDump
                 if (part == null || part.name.Length >= 9 && part.name.Substring(0, 9) == "kerbalEVA")
                     continue;
                 string[] colData = new string[MAXCOL];
-
+                string lastModuleName = "";
+                int multiple = 0;
                 string partModName = Utils.FindPartMod(part);
                 if (partModName != "")
                 {
+                    // Check to see if this part module is selected
                     if (ActiveLists.modList.TryGetValue(partModName, out DataValue dv) && dv.enabled)
                     {
                         for (int i = 0; i < MAXCOL; i++)
                             colData[i] = null;
+                        lastModuleName = "";
+                        multiple = 0;
 
-
-                        // Now all the module info
-                        foreach (PartModule module in part.partPrefab.Modules)
+                        // Go through all the modules on the part.  Sort it to keep multiple (ie:  ModuleEnginesFx) sequential
+                        var orderedList = part.partPrefab.Modules;
+                        foreach (PartModule partModule in orderedList)
                         {
-                            var a = module.GetType();
-
-                            if (module.moduleName == null)
+                            if (partModule.moduleName == null)
                                 continue;
+                            multiple += (partModule.moduleName == lastModuleName) ? 1 : 0;
+                            lastModuleName = partModule.moduleName;
 
-                            string usefulModuleName = Module.UsefulModuleName(module.moduleName);
+                            var partModType = partModule.GetType();
+                            Module mod = new Module(partModName, partModule.moduleName, partModType);
+
+
+                            //string usefulModuleName = Module.UsefulModuleName(module.moduleName);
                             //Module mod = new Module(partModName, usefulModuleName, a);
-                            Module mod = new Module(partModName, module.moduleName, a);
 
+                            // Go through the list of selected part modules
                             if (ActiveLists.activeModuleList.TryGetValue(mod.ActiveKey, out mod))
                             {
-                                if (moduleInfoList.ContainsKey(mod.moduleName))
+                                if (moduleInfoList.ContainsKey(mod.ModuleInfoKey(multiple)))
                                 {
-                                    var m = moduleInfoList[mod.moduleName];
+                                    var m = moduleInfoList[mod.ModuleInfoKey(multiple)];
                                     int cnt = 0;
                                     if (ActiveLists.activePropertyList.TryGetValue(Property.GetKey(mod.modName, mod.moduleName), out Property p))
                                     {
-                                        foreach (var s in p.fields) //FromReflection)
+                                        foreach (FldInfo s in p.fields) //FromReflection)
                                         {
 
                                             Field field = new Field(mod.modName, mod.moduleName, s.Name);
@@ -477,14 +493,23 @@ namespace KSP_DataDump
                                                         var moduleNodes = part.partConfig.GetNodes("MODULE");
                                                         if (moduleNodes == null)
                                                             Log.Error("moduleNodes is null");
-                                                        foreach (var moduleNode in moduleNodes)
+                                                        string lastModuleNodeName = "";
+                                                        foreach (ConfigNode moduleNode in moduleNodes)
                                                         {
                                                             var name = moduleNode.GetValue("name");
-                                                            if (name != null && name == module.moduleName)
+
+                                                            string v1 = "";
+                                                            moduleNode.TryGetValue(s.Name, ref v1);
+
+
+                                                            if ((name == partModule.moduleName && multiple == 0) ||
+                                                                (name == partModule.moduleName && multiple == 1 && partModule.moduleName == lastModuleNodeName))
                                                             {
                                                                 moduleNode.TryGetValue(s.Name, ref v);
                                                                 break;
                                                             }
+
+                                                            lastModuleNodeName = name;
                                                         }
                                                     }
 

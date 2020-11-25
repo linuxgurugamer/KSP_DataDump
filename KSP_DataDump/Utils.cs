@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using static KSP_DataDump.DataDump;
 
@@ -61,5 +62,12 @@ namespace KSP_DataDump
             return loadedParts;
         }
 
+        public static System.Linq.IOrderedEnumerable<PartModule> GetOrderedModuleList(AvailablePart part)
+        {
+            List<PartModule> list = new List<PartModule>();
+            foreach (PartModule m in part.partPrefab.Modules)
+                list.Add(m);
+            return  list.OrderBy(n => n.moduleName);
+        }
     }
 }

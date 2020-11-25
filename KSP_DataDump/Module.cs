@@ -14,7 +14,7 @@ namespace KSP_DataDump
         public System.Type type;
         public bool enabled;
         public PartModule module;
-
+        public bool multipleModules;
         public Module(string modName, string moduleName, System.Type type)
         {
             this.modName = modName;
@@ -22,6 +22,7 @@ namespace KSP_DataDump
             this.type = type;
 
             enabled = false;
+            multipleModules = false;
         }
 
         public string ModuleToString()
@@ -44,6 +45,12 @@ namespace KSP_DataDump
                     return Key;
             }
         }
+
+        public string ModuleInfoKey(int i)
+        {
+            return moduleName + (i == 0 ? "" : "-2");
+        }
+
         static public void GetModuleList()
         {
             List<AvailablePart> loadedParts = Utils.GetPartsList();

@@ -7,14 +7,14 @@ namespace KSP_DataDump
 {
     partial class DataDump
     {
-        public enum PartAttrEnum { first, DimensionsInfo, minimum_drag, maximum_drag, angularDrag, crashTolerance, breakingForce, breakingtorque, maxTemp, mass, category, last };
-        public static readonly string[] PartAttrStr = { "Dimensions info", "MinDrag", "MaxDrag", "AngularDrag", "CrashTolerance", "BreakingForce", "BreakingTorque", "MaxTemp", "Mass", "Category", };
+        public enum PartAttrEnum { first, TechRequired, entryCost, cost , category, DimensionsInfo, minimum_drag, maximum_drag, angularDrag, crashTolerance, breakingForce, breakingtorque, maxTemp, mass, last };
+        public static readonly string[] PartAttrStr = { "TechRequired", "entryCost", "cost", "Category", "Dimensions info", "MinDrag", "MaxDrag", "AngularDrag", "CrashTolerance", "BreakingForce", "BreakingTorque", "MaxTemp", "Mass"};
         public static Property[] partAttrs = new Property[PartAttrStr.Length];
         void DrawPartAttributes(int d)
         {
 
             GUILayout.BeginHorizontal();
-            List<FldInfo> baseFieldInfo = null;
+           // List<FldInfo> baseFieldInfo = null;
 
             propertiesScrollPos = GUILayout.BeginScrollView(propertiesScrollPos);
             for (var partAttr = PartAttrEnum.first + 1; partAttr < PartAttrEnum.last; partAttr++)

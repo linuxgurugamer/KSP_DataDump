@@ -34,7 +34,7 @@ namespace KSP_DataDump
         private Rect posModuleDataDumpWindow = new Rect(450, 450, MODULES_WIDTH, MIN_HEIGHT);
         private Rect posFieldsDumpWindow = new Rect(450, 450, MODULES_WIDTH, MIN_HEIGHT);
 
-        string partAttrSearchStr = "";
+        //string partAttrSearchStr = "";
         string fieldSearchStr = "";
         string modSearchStr = "";
         bool rememberField = false, rememberMod = false;
