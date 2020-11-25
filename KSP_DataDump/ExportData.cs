@@ -46,6 +46,20 @@ namespace KSP_DataDump
         }
         Dictionary<string, ModuleInfo> moduleInfoList = new Dictionary<string, ModuleInfo>();
 
+        internal class ResInfo
+        {
+            internal string resourceName;
+            internal float maxResources;
+
+            internal ResInfo(string name, float res)
+            {
+                resourceName = name;
+                maxResources = res;
+            }
+        }
+        Dictionary<string, ResInfo> resourceInfoList = new Dictionary<string, ResInfo>();
+
+
         StringBuilder line, headerLine;
         int colCnt = 0;
         void StartLine(string str)
@@ -105,15 +119,20 @@ namespace KSP_DataDump
                         {
                             if (DataDump.partAttrs[(int)partAttr - 1] != null && DataDump.partAttrs[(int)partAttr - 1].enabled)
                             {
-                                if (partAttr == PartAttrEnum.DimensionsInfo)
+                                switch (partAttr)
                                 {
-                                    AppendLine("X");
-                                    AppendLine("Y");
-                                    AppendLine("Z");
-                                }
-                                else
-                                {
-                                    AppendLine(PartAttrStr[(int)partAttr - 1] /* + "-pre" */);
+                                    case PartAttrEnum.DimensionsInfo:
+                                        AppendLine("X");
+                                        AppendLine("Y");
+                                        AppendLine("Z");
+                                        break;
+                                    case PartAttrEnum.Resources:
+                                        for (int i = 1; i <= maxResources; i++)
+                                            AppendLine("Resource-" + i.ToString());
+                                        break;
+                                    default:
+                                        AppendLine(PartAttrStr[(int)partAttr - 1] /* + "-pre" */);
+                                        break;
                                 }
                             }
                         }
@@ -176,7 +195,7 @@ namespace KSP_DataDump
                                         {
                                             moduleInfoList[mod.ModuleInfoKey(i)].numFields++;
                                         }
-                                        string str = mod.moduleName + (i==0?"":"-2")+ "." + s.Name;
+                                        string str = mod.moduleName + (i == 0 ? "" : "-2") + "." + s.Name;
                                         if (!colHeader.ContainsKey(str))
                                         {
                                             colHeader.Add(str, str);
@@ -302,25 +321,49 @@ namespace KSP_DataDump
                         {
                             if (DataDump.partAttrs[(int)partAttr - 1] != null && DataDump.partAttrs[(int)partAttr - 1].enabled)
                             {
-                                if (partAttr == PartAttrEnum.DimensionsInfo)
+                                switch (partAttr)
                                 {
-                                    AppendLine(pg.x.ToString("F3"));
-                                    AppendLine(pg.y.ToString("F3"));
-                                    AppendLine(pg.z.ToString("F3"));
-                                }
-                                else
-                                {
-                                    string str = "n/a";
-                                    str = "";
-                                    if (!part.partConfig.TryGetValue(partAttr.ToString(), ref str))
-                                    {
+                                    case PartAttrEnum.DimensionsInfo:
+                                        AppendLine(pg.x.ToString("F3"));
+                                        AppendLine(pg.y.ToString("F3"));
+                                        AppendLine(pg.z.ToString("F3"));
+                                        break;
+                                    case PartAttrEnum.Resources:
+                                        var nodes = part.partConfig.GetNodes("RESOURCE").ToList().OrderBy(r => r.name);
+                                        int cnt = 0;
+                                        foreach (var n in nodes)
+                                        {
+                                            foreach (AvailablePart.ResourceInfo r in part.resourceInfos)
+                                            {
+                                                string name = n.GetValue("name");
+                                                if (name == r.resourceName)
+                                                {
+                                                    string maxAmount = n.GetValue("maxAmount");
+
+                                                    if (cnt < maxResources)
+                                                        AppendLine(name + ":" + maxAmount);
+                                                    cnt++;
+                                                    if (cnt >= maxResources) break;
+
+                                                }
+                                            }
+                                            if (cnt >= maxResources) break;
+                                        }
+                                        break;
+                                    default:
+                                        string str = "n/a";
                                         str = "";
-                                        Log.Error("data not found");
-                                    }
+                                        if (!part.partConfig.TryGetValue(partAttr.ToString(), ref str))
+                                        {
+                                            str = "";
+                                            Log.Error("data not found");
+                                        }
 
-                                    //str = part.partConfig.GetValue(partAttr.ToString());
+                                        //str = part.partConfig.GetValue(partAttr.ToString());
 
-                                    AppendLine(str);
+                                        AppendLine(str);
+
+                                        break;
                                 }
                             }
                         }

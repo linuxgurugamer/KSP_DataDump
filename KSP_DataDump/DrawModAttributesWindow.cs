@@ -9,9 +9,6 @@ namespace KSP_DataDump
     {
         void DrawModAttributesWindow(int d)
         {
-
-
-
             GUILayout.BeginHorizontal();
             List<FldInfo> baseFieldInfo = null;
 

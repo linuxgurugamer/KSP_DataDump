@@ -39,8 +39,9 @@ Changelog
 	Fixed error caused by kerbalEVA parts
 	Added code to prevent filenames of ".csv"
 
-0.0.2 (unreleased)
+0.0.2
 	Added following additional part attribute fields:
 		TechRequired, entryCost, cost
 	Removed appended text "-pre" to part attr headers
 	Added ability to report on possible 2nd module of same name 
+	Added simple export of resources

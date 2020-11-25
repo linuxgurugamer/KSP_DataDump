@@ -7,9 +7,10 @@ namespace KSP_DataDump
 {
     partial class DataDump
     {
-        public enum PartAttrEnum { first, TechRequired, entryCost, cost , category, DimensionsInfo, minimum_drag, maximum_drag, angularDrag, crashTolerance, breakingForce, breakingtorque, maxTemp, mass, last };
-        public static readonly string[] PartAttrStr = { "TechRequired", "entryCost", "cost", "Category", "Dimensions info", "MinDrag", "MaxDrag", "AngularDrag", "CrashTolerance", "BreakingForce", "BreakingTorque", "MaxTemp", "Mass"};
+        public enum PartAttrEnum { first, TechRequired, entryCost, cost , category, DimensionsInfo, minimum_drag, maximum_drag, angularDrag, crashTolerance, breakingForce, breakingtorque, maxTemp, mass, Resources, last };
+        public static readonly string[] PartAttrStr = { "TechRequired", "entryCost", "cost", "Category", "Dimensions info", "MinDrag", "MaxDrag", "AngularDrag", "CrashTolerance", "BreakingForce", "BreakingTorque", "MaxTemp", "Mass", "Resources"};
         public static Property[] partAttrs = new Property[PartAttrStr.Length];
+        public static int maxResources = 3;
         void DrawPartAttributes(int d)
         {
 
@@ -28,6 +29,18 @@ namespace KSP_DataDump
                 }      
                 GUILayout.FlexibleSpace();
 
+                if (partAttr == PartAttrEnum.Resources)
+                {
+                    if (GUILayout.Button("<", GUILayout.Width(20)))
+                    {
+                        maxResources = Math.Max(1, maxResources - 1);
+                    }
+                    GUILayout.Label(maxResources.ToString());
+                    if (GUILayout.Button(">", GUILayout.Width(20)))
+                    {
+                        maxResources++;
+                    }
+                }
                 if (partAttrs[(int)partAttr - 1].enabled)
                 {
                     if (GUILayout.Button("X", buttonRedStyle))
