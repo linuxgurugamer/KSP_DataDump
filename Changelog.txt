@@ -45,3 +45,8 @@ Changelog
 	Removed appended text "-pre" to part attr headers
 	Added ability to report on possible 2nd module of same name 
 	Added simple export of resources
+
+0.0.2.1
+	Renamed DLL for CKAN compatibility
+	Added AssemblyFileVersion
+	Updated version file for 1.12
