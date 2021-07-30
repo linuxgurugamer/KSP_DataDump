@@ -1,0 +1,5 @@
+Hello here ! With the release of 1.12 I was trying DataDump again, and I noted that some columns in the csv are blank : TechRequired, entryCost, cost, Category, BreakingTorque. Also, the BreakingForce for many parts is blank.
+The log is full of "DataDump: data not found" or "DataDump: GetPartData, not found".
+Tested on 1.12 and 1.11.2 with Squad parts, same issues.
+
+Also, thanks for the XYZ dimensions and the resources, very useful. I was wondering if it's possible to get the volume of a part. Not just the bound box volume like with KSP_PartVolume, but the real volume of the object. If not possible it's ok, I use basic formulas to get approximate volumes from XYZ.

@@ -50,3 +50,11 @@ Changelog
 	Renamed DLL for CKAN compatibility
 	Added AssemblyFileVersion
 	Updated version file for 1.12
+
+0.0.2.2
+	Added code to get the following data from the class rather than the ConfigNode:
+		TechRequired
+		entryCost
+		cost
+		category
+	Added new option to use default values for the attributes

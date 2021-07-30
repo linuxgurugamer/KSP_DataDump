@@ -40,6 +40,7 @@ namespace KSP_DataDump
         bool rememberField = false, rememberMod = false;
         bool rememberPartAttrSearchStr = false;
         internal static bool selectedModsAppliesToAll = false;
+        internal static bool useDefaultValues = false;
         public static Log Log;
 
         static public ActiveLists activeLists;

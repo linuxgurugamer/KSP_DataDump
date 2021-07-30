@@ -342,13 +342,59 @@ namespace KSP_DataDump
                                             if (cnt >= maxResources) break;
                                         }
                                         break;
+                                    case PartAttrEnum.TechRequired:
+                                        AppendLine(part.TechRequired);
+                                        break;
+                                    case PartAttrEnum.entryCost:
+                                        AppendLine(part.entryCost);
+                                        break;
+                                    case PartAttrEnum.cost:
+                                        AppendLine(part.cost);
+                                        break;
+                                    case PartAttrEnum.category:
+                                        AppendLine(part.category.ToString());
+                                        break;
+
                                     default:
                                         string str = "n/a";
                                         str = "";
+
                                         if (!part.partConfig.TryGetValue(partAttr.ToString(), ref str))
                                         {
-                                            str = "";
-                                            Log.Error("data not found");
+                                            if (useDefaultValues)
+                                            {
+                                                Part p1 = new Part();
+                                            
+                                                switch (partAttr)
+                                                {
+                                                    case PartAttrEnum.breakingForce:
+                                                        str = p1.breakingForce.ToString();
+                                                        break;
+                                                    case PartAttrEnum.breakingtorque:
+                                                        str = p1.breakingTorque.ToString();
+                                                        break;
+                                                    case PartAttrEnum.minimum_drag:
+                                                        str = p1.minimum_drag.ToString();
+                                                        break;
+                                                    case PartAttrEnum.maximum_drag:
+                                                       str = p1.maximum_drag.ToString();
+                                                        break;
+                                                    case PartAttrEnum.angularDrag:
+                                                        str = p1.angularDrag.ToString();
+                                                        break;
+                                                    case PartAttrEnum.crashTolerance:
+                                                        str = p1.crashTolerance.ToString();
+                                                        break;
+                                                    case PartAttrEnum.maxTemp:
+                                                        str = p1.maxTemp.ToString();
+                                                        break;
+                                                    case PartAttrEnum.mass:
+                                                        AppendLine("Default: " + p1.mass);
+                                                        break;
+                                                }
+                                            }
+                                            else
+                                                Log.Error("data not found");
                                         }
 
                                         //str = part.partConfig.GetValue(partAttr.ToString());
@@ -446,7 +492,14 @@ namespace KSP_DataDump
                     }
                     else
                     {
-                        Log.Error("GetPartData, not found");
+#if false
+                        if (field == null)
+                            Log.Error("GetPartData, field is null");
+                        else if (field.ActiveKey == null)
+                            Log.Error("GetPartData, field.ActiveKey is null");
+                        else
+                            Log.Error("GetPartData, not found: " + field.ActiveKey);
+#endif
                     }
                 }
             }
@@ -472,7 +525,8 @@ namespace KSP_DataDump
 
             foreach (AvailablePart part in loadedParts)
             {
-                if (part == null || part.name.Length >= 9 && part.name.Substring(0, 9) == "kerbalEVA")
+                //if (part == null || part.name.Length >= 9 && part.name.Substring(0, 9) == "kerbalEVA")                    continue;
+                if (part == null || part.name.Contains("flag") || part.name.Contains("kerbalEVA"))
                     continue;
                 string[] colData = new string[MAXCOL];
                 string lastModuleName = "";

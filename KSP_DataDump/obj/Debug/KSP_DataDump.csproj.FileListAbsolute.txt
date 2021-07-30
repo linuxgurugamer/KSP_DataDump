@@ -3,9 +3,9 @@ D:\Users\jbb\github\KSP_DataDump\KSP_DataDump\bin\Debug\KSP_Log.dll
 D:\Users\jbb\github\KSP_DataDump\KSP_DataDump\bin\Debug\ToolbarControl.dll
 D:\Users\jbb\github\KSP_DataDump\KSP_DataDump\obj\Debug\KSP_DataDump.csproj.CoreCompileInputs.cache
 D:\Users\jbb\github\KSP_DataDump\KSP_DataDump\obj\Debug\KSP_DataDump.csproj.CopyComplete
-D:\Users\jbb\github\KSP_DataDump\KSP_DataDump\obj\Debug\KSP_DataDump.csprojAssemblyReference.cache
 D:\Users\jbb\github\KSP_DataDump\KSP_DataDump\bin\Debug\KSPDataDump.dll
 D:\Users\jbb\github\KSP_DataDump\KSP_DataDump\bin\Debug\KSPDataDump.pdb
 D:\Users\jbb\github\KSP_DataDump\KSP_DataDump\bin\Debug\SpaceTuxUtility.dll
 D:\Users\jbb\github\KSP_DataDump\KSP_DataDump\obj\Debug\KSPDataDump.dll
 D:\Users\jbb\github\KSP_DataDump\KSP_DataDump\obj\Debug\KSPDataDump.pdb
+D:\Users\jbb\github\KSP_DataDump\KSP_DataDump\obj\Debug\KSP_DataDump.csprojAssemblyReference.cache

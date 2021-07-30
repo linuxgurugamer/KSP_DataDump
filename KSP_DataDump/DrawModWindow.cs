@@ -21,6 +21,11 @@ namespace KSP_DataDump
                 posPartAttrDataDumpWindow.x = posModDataDumpWindow.x + posModDataDumpWindow.width;
                 posPartAttrDataDumpWindow.y = posModDataDumpWindow.y;
             }
+
+            if (GUILayout.Button(useDefaultValues ? "Use default values for Attributes if not specified" : "Don't use default values for Attributes"))
+            {
+                useDefaultValues = !useDefaultValues;
+            }
             foreach (var m in ActiveLists.modList)
             {
                 GUILayout.BeginHorizontal();
